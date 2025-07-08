@@ -1,0 +1,45 @@
+{
+  "nodes": {
+    "aliases": {
+      "locked": {
+        "dir": "flakes/git-aliases",
+        "lastModified": 1751979665,
+        "narHash": "sha256-6AdOgkNLzZ8J9wbTtbk/piaP+dWS9llJ+X2El4NqQCk=",
+        "owner": "teodord25",
+        "repo": "dotfiles",
+        "rev": "8a9ac5ce362f52b9553d578576f9328a72f7d3d6",
+        "type": "github"
+      },
+      "original": {
+        "dir": "flakes/git-aliases",
+        "owner": "teodord25",
+        "repo": "dotfiles",
+        "type": "github"
+      }
+    },
+    "nixpkgs": {
+      "locked": {
+        "lastModified": 1751792365,
+        "narHash": "sha256-J1kI6oAj25IG4EdVlg2hQz8NZTBNYvIS0l4wpr9KcUo=",
+        "owner": "NixOS",
+        "repo": "nixpkgs",
+        "rev": "1fd8bada0b6117e6c7eb54aad5813023eed37ccb",
+        "type": "github"
+      },
+      "original": {
+        "owner": "NixOS",
+        "ref": "nixos-unstable",
+        "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "root": {
+      "inputs": {
+        "aliases": "aliases",
+        "nixpkgs": "nixpkgs"
+      }
+    }
+  },
+  "root": "root",
+  "version": 7
+}
