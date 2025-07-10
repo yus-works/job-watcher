@@ -4,21 +4,19 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+
+	"github.com/yus-works/jod-watcher/internal/router"
 )
 
-func hello(w http.ResponseWriter, req *http.Request) {
-	fmt.Fprintf(w, "hello\n")
-}
-
 func main() {
-	fmt.Println("hello world")
+	fs := http.FileServer(http.Dir("./static"))
+	http.Handle("/static/", 
+		http.StripPrefix("/static/", fs),
+	)
 
 	tmpl := template.Must(template.ParseGlob("internal/tmpl/*.html"))
+	router.RegisterHandlers(tmpl)
 
-    http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		tmpl.ExecuteTemplate(w, "home", nil)
-    })
-
-	http.HandleFunc("/hello", hello)
+	fmt.Println("Listening on :8080")
 	http.ListenAndServe(":8080", nil)
 }
