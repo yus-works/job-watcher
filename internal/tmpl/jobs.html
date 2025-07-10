@@ -1,0 +1,17 @@
+{{ define "card" }}
+<div class="job-card">
+	<h2><a href="{{ .URL }}">{{ .Title }}</a></h2>
+	{{ with .Company }}<p><strong>Company:</strong> {{ . }}</p>{{ end }}
+	<p><small>Posted: {{ .InsertedAt.Format "2006-01-02" }}</small></p>
+</div>
+{{ end }}
+
+{{ define "jobs" }}
+<div id="job-list">
+	{{ range . }}
+		{{ template "card" . }}
+	{{ else }}
+		<p>No jobs found.</p>
+	{{ end }}
+</div>
+{{ end }}
