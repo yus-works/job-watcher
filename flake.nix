@@ -1,5 +1,5 @@
 {
-  description = "A Nix-flake-based Go dev env";
+  description = "A Nix-flake-based Go dev env with Air hot reload";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
@@ -14,7 +14,7 @@
       ...
     }:
     let
-      goVersion = "1_24"; # bump when you need
+      goVersion = "1_24";
       systems = [
         "x86_64-linux"
         "aarch64-linux"
@@ -45,16 +45,20 @@
               go
               gotools
               golangci-lint
-              gopls # language-server
+              gopls
+              air
             ];
 
             shellHook = ''
-              # shared aliases from your alias flake
+              # Shared aliases from alias flake
               ${pkgs.sharedAliases}
 
               # Go module / GOPATH hygiene
               export GOPATH=$PWD/.go
               export GO111MODULE=on
+
+              # Air hot reload
+              alias a='air'
 
               echo "Go ${goVersion} dev-shell ready 🚀"
             '';
