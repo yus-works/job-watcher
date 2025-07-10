@@ -9,36 +9,36 @@
 {{ end }}
 
 {{ define "content" }}
-  <div class="filters">
-    <input
-      type="text"
-      name="search"
-      placeholder="Filter jobs…"
-      hx-get="/jobs"
-      hx-target="#job-list"
-      hx-trigger="keyup changed delay:300ms"
-    />
-    <select
-      name="sort"
-      hx-get="/jobs"
-      hx-target="#job-list"
-      hx-trigger="change"
-    >
-      <option value="newest">Newest first</option>
-      <option value="oldest">Oldest first</option>
-      <option value="score">Highest score</option>
-    </select>
-  </div>
+<div class="filters">
+	<input
+		type="text"
+		name="search"
+		placeholder="Filter jobs…"
+		hx-get="/jobs"
+		hx-target="#job-list"
+		hx-trigger="keyup changed delay:300ms"
+	/>
+	<select
+		name="sort"
+		hx-get="/jobs"
+		hx-target="#job-list"
+		hx-trigger="change"
+	>
+		<option value="newest">Newest first</option>
+		<option value="oldest">Oldest first</option>
+		<option value="score">Highest score</option>
+	</select>
+</div>
 
-  <div id="job-list">
-    {{ range .Jobs }}
-      {{ template "card" . }}
-    {{ else }}
-      <p>No jobs found.</p>
-    {{ end }}
-  </div>
+<div id="job-list">
+	{{ range . }}
+		{{ template "card" . }}
+	{{ else }}
+		<p>No jobs found.</p>
+	{{ end }}
+</div>
 {{ end }}
 
 {{ define "home" }}
-  {{ template "base" . }}
+	{{ template "base" . }}
 {{ end }}

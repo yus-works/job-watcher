@@ -5,8 +5,12 @@ import (
 	"net/http"
 
 	"github.com/yus-works/jod-watcher/internal/pages/home"
+	"github.com/yus-works/jod-watcher/internal/store"
 )
 
-func RegisterHandlers(tmpl *template.Template) {
-	http.HandleFunc("/", home.Register(tmpl))
+func RegisterHandlers(
+	t *template.Template,
+	s *store.JobStore,
+) {
+	http.HandleFunc("/", home.Register(t, s))
 }
