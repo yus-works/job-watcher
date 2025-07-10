@@ -1,4 +1,4 @@
-module github.com/yus-works/jod-watcher
+module github.com/yus-works/job-watcher
 
 go 1.24.4
 

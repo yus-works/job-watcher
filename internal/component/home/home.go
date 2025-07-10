@@ -8,7 +8,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/yus-works/jod-watcher/internal/store"
+	"github.com/yus-works/job-watcher/internal/store"
 )
 
 func seed(ctx context.Context, st *store.JobStore) {

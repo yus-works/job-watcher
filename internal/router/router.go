@@ -4,8 +4,9 @@ import (
 	"html/template"
 	"net/http"
 
-	"github.com/yus-works/jod-watcher/internal/pages/home"
-	"github.com/yus-works/jod-watcher/internal/store"
+	"github.com/yus-works/job-watcher/internal/component/home"
+	"github.com/yus-works/job-watcher/internal/component/jobs"
+	"github.com/yus-works/job-watcher/internal/store"
 )
 
 func RegisterHandlers(
@@ -13,4 +14,5 @@ func RegisterHandlers(
 	s *store.JobStore,
 ) {
 	http.HandleFunc("/", home.Register(t, s))
+	http.HandleFunc("/jobs", jobs.Register(t, s))
 }

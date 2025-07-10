@@ -6,8 +6,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/yus-works/jod-watcher/internal/router"
-	"github.com/yus-works/jod-watcher/internal/store"
+	"github.com/yus-works/job-watcher/internal/router"
+	"github.com/yus-works/job-watcher/internal/store"
 )
 
 func main() {
