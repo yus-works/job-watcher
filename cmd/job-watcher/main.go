@@ -56,5 +56,5 @@ func main() {
 	http.HandleFunc("/clock", clockSSE)
 
 	fmt.Println("Listening on :8080")
-	http.ListenAndServe(":8080", nil)
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
