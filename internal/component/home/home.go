@@ -29,8 +29,6 @@ func seed(ctx context.Context, st *store.JobStore) {
 
 func Register(tmpl *template.Template, st *store.JobStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		// TODO: figure out why this block is ran twice
-
 		ctx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
 		defer cancel()
 
