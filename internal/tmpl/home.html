@@ -22,6 +22,15 @@
 	</select>
 </div>
 
+<div
+	id="clock"
+	hx-ext="sse"
+	sse-connect="/clock"
+	sse-swap="clockEvent"
+>
+	Waiting…
+</div>
+
 {{ template "jobs" . }}
 
 {{ end }}
