@@ -3,4 +3,6 @@
 ---
 ## 2025-07-12
 - Removing errgroup to keep deps lean and theres no need for an error channel
+### TODOs:
+- [ ] Prototype making the aggregator a small standalone service
 ---
