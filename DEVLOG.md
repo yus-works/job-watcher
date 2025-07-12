@@ -5,4 +5,5 @@
 - Removing errgroup to keep deps lean and theres no need for an error channel
 ### TODOs:
 - [ ] Prototype making the aggregator a small standalone service
+- [ ] Prototype TDD for deduplication and parsing
 ---
