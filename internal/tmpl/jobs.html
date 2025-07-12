@@ -1,17 +1,22 @@
 {{ define "card" }}
 <div class="job-card">
-	<h2><a href="{{ .URL }}">{{ .Title }}</a></h2>
+	<h2><a href="{{ .Link }}">{{ .Title }}</a></h2>
+	{{ with .Location }}<p><strong>Location:</strong> {{ . }}</p>{{ end }}
 	{{ with .Company }}<p><strong>Company:</strong> {{ . }}</p>{{ end }}
-	<p><small>Posted: {{ .InsertedAt.Format "2006-01-02" }}</small></p>
+	{{ with .Kind }}<p><strong>Kind:</strong> {{ . }}</p>{{ end }}
+	{{ with .Date }}<p><strong>Date:</strong> {{ . }}</p>{{ end }}
 </div>
 {{ end }}
 
 {{ define "jobs" }}
-<div id="job-list">
-	{{ range . }}
-		{{ template "card" . }}
-	{{ else }}
-		<p>No jobs found.</p>
-	{{ end }}
+<div
+	id="job-list"
+	hx-swap="afterbegin"
+	hx-ext="sse"
+
+	sse-connect="/jobs"
+	sse-swap="foundJobs"
+	sse-close="done"
+>
 </div>
 {{ end }}

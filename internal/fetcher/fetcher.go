@@ -6,27 +6,30 @@ import (
 	"net/http"
 	"sync"
 	"time"
+
+	"github.com/yus-works/job-watcher/internal/feed"
 )
 
-func fetch(ctx context.Context, c *http.Client, url string) ([]Item, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
+func fetch[T feed.Feed](ctx context.Context, c *http.Client, feed T) ([]feed.Item, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feed.GetUrl(), nil)
 	if err != nil {
 		return nil, err
 	}
+	
 	resp, err := c.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
 
-	return decodeItems(resp.Body)
+	return feed.Parse(resp.Body)
 }
 
-func Stream(
+func Stream[T feed.Feed](
 	ctx context.Context,
-	urls []string,
-) <-chan Item {
-	out := make(chan Item)
+	feeds []T,
+) <-chan feed.Item {
+	out := make(chan feed.Item)
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,
@@ -39,17 +42,17 @@ func Stream(
 
 	var wg sync.WaitGroup
 
-	for _, u := range urls {
-		url := u // capture value
+	for _, f := range feeds {
+		feed := f // capture value
 
 		wg.Add(1)
 
 		go func() {
 			defer wg.Done()
 
-			items, err := fetch(ctx, client, url)
+			items, err := fetch(ctx, client, feed)
 			if err != nil {
-				log.Printf("fetch %s: %v", url, err)
+				log.Printf("fetch %s: %v", feed.GetUrl(), err)
 				return
 			}
 
