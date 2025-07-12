@@ -27,7 +27,7 @@ func seed(ctx context.Context, st *store.JobStore) {
 	fmt.Println("SEEDING DONE")
 }
 
-func Register(tmpl *template.Template, st *store.JobStore) http.HandlerFunc {
+func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
 		defer cancel()
@@ -46,7 +46,7 @@ func Register(tmpl *template.Template, st *store.JobStore) http.HandlerFunc {
 			return
 		}
 
-		err = tmpl.ExecuteTemplate(w, "home", jobs)
+		err = tl.ExecuteTemplate(w, "home", jobs)
 		if err != nil {
 			log.Println("ERROR: ", err)
 		}
