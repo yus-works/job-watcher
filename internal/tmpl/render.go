@@ -3,6 +3,7 @@ package tmpl
 import (
 	"bytes"
 	"html/template"
+	"log"
 )
 
 func Render(
@@ -11,6 +12,9 @@ func Render(
 	data any,
 ) string {
 	var buf bytes.Buffer
-	_ = t.ExecuteTemplate(&buf, name, data)
+	err := t.ExecuteTemplate(&buf, name, data)
+	if err != nil {
+		log.Printf("ERROR: Executing template %s: %v", name, err)
+	}
 	return buf.String()
 }
