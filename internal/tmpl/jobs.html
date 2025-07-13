@@ -1,6 +1,7 @@
 {{ define "card" }}
 <div class="job-card">
 	<h2><a href="{{ .Link }}">{{ .Title }}</a></h2>
+	<h3><a href="{{ .Link }}">{{ .Source }}</a></h2>
 	{{ with .Location }}<p><strong>Location:</strong> {{ . }}</p>{{ end }}
 	{{ with .Company }}<p><strong>Company:</strong> {{ . }}</p>{{ end }}
 	{{ with .Kind }}<p><strong>Kind:</strong> {{ . }}</p>{{ end }}

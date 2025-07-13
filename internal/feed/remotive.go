@@ -9,11 +9,16 @@ import (
 )
 
 type RemotiveFeed struct {
+	Source string
 	Url string
 }
 
 func (f RemotiveFeed) GetUrl() string {
 	return f.Url
+}
+
+func (f RemotiveFeed) GetSource() string {
+	return f.Source
 }
 
 func (f RemotiveFeed) Parse(body io.Reader) ([]Item, error) {
@@ -35,6 +40,7 @@ func (f RemotiveFeed) Parse(body io.Reader) ([]Item, error) {
 		}
 
 		out = append(out, Item{
+			Source:   f.GetSource(),
 			Title:    fi.Title,
 			Link:     fi.Link,
 			Date:     when,

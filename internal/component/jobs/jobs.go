@@ -47,6 +47,7 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 
 		feeds := make([]feed.RemotiveFeed, 0)
 		feeds = append(feeds, feed.RemotiveFeed {
+			Source: "Remotive",
 			Url: "http://localhost:8000/remotive.rss",
 		})
 

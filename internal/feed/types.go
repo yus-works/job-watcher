@@ -6,11 +6,13 @@ import (
 )
 
 type Feed interface {
+	GetSource() string
 	GetUrl() string
 	Parse(r io.Reader) ([]Item, error)
 }
 
 type Item struct {
+	Source string
     Title    string
     Link     string
     Date     time.Time
