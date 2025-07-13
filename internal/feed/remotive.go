@@ -10,7 +10,7 @@ import (
 
 type RemotiveFeed struct {
 	Source string
-	Url string
+	Url    string
 }
 
 func (f RemotiveFeed) GetUrl() string {
@@ -40,10 +40,10 @@ func (f RemotiveFeed) Parse(body io.Reader) ([]Item, error) {
 		}
 
 		out = append(out, Item{
-			Source:   f.GetSource(),
-			Title:    fi.Title,
-			Link:     fi.Link,
-			Date:     when,
+			Source: f.GetSource(),
+			Title:  fi.Title,
+			Link:   fi.Link,
+			Date:   when,
 
 			Company:  fi.Custom["company"],
 			Location: fi.Custom["location"],

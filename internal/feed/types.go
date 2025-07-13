@@ -13,12 +13,12 @@ type Feed interface {
 
 type Item struct {
 	Source string
-    Title    string
-    Link     string
-    Date     time.Time
-    GUID     string
+	Title  string
+	Link   string
+	Date   time.Time
+	GUID   string
 
-    Company  string
-    Location string
-    Kind     string // fulltime, contract, etc.
+	Company  string
+	Location string
+	Kind     string // fulltime, contract, etc.
 }
