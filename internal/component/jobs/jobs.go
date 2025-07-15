@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/yus-works/job-watcher/internal/fetcher"
 	"github.com/yus-works/job-watcher/internal/source"
@@ -52,7 +53,16 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 			),
 		)
 
-		itemsCh := fetcher.Stream(ctx, feeds)
+		client := &http.Client{
+			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				MaxIdleConns:       100,
+				IdleConnTimeout:    90 * time.Second,
+				DisableCompression: false,
+			},
+		}
+
+		itemsCh := fetcher.Stream(ctx, feeds, client)
 
 		for {
 			select {

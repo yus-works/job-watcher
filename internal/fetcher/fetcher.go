@@ -5,7 +5,6 @@ import (
 	"log"
 	"net/http"
 	"sync"
-	"time"
 
 	"github.com/yus-works/job-watcher/internal/source"
 )
@@ -28,17 +27,9 @@ func fetch[T source.Source](ctx context.Context, c *http.Client, feed T) ([]sour
 func Stream[T source.Source](
 	ctx context.Context,
 	feeds []T,
+	client *http.Client,
 ) <-chan source.Item {
 	out := make(chan source.Item)
-
-	client := &http.Client{
-		Timeout: 10 * time.Second,
-		Transport: &http.Transport{
-			MaxIdleConns:       100,
-			IdleConnTimeout:    90 * time.Second,
-			DisableCompression: false,
-		},
-	}
 
 	var wg sync.WaitGroup
 
