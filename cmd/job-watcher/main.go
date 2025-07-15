@@ -29,8 +29,11 @@ func main() {
 	}
 
 	tmpl := template.Must(template.ParseGlob("internal/tmpl/*.html"))
-	router.RegisterHandlers(tmpl, store)
 
 	fmt.Println("Listening on :8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: router.NewRouter(tmpl, store),
+	}
+	log.Fatal(srv.ListenAndServe())
 }
