@@ -1,4 +1,4 @@
-package source
+package feed
 
 import (
 	"io"

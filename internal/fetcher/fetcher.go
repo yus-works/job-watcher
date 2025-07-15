@@ -6,10 +6,10 @@ import (
 	"net/http"
 	"sync"
 
-	"github.com/yus-works/job-watcher/internal/source"
+	"github.com/yus-works/job-watcher/internal/feed"
 )
 
-func fetch[T source.Source](ctx context.Context, c *http.Client, feed T) ([]source.Item, error) {
+func fetch[T feed.Feed](ctx context.Context, c *http.Client, feed T) ([]feed.Item, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feed.GetUrl(), nil)
 	if err != nil {
 		return nil, err

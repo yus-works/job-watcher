@@ -7,6 +7,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/yus-works/job-watcher/internal/feed"
 	"github.com/yus-works/job-watcher/internal/fetcher"
 	"github.com/yus-works/job-watcher/internal/source"
 	"github.com/yus-works/job-watcher/internal/store"
@@ -46,12 +47,11 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 
 		ctx := req.Context()
 
-		feeds := make([]source.RemotiveFeed, 0)
-		feeds = append(feeds,
-			source.NewRemotiveFeed(
-				"Remotive", "http://localhost:8000/remotive.rss",
-			),
-		)
+		feeds := make([]feed.RemotiveFeed, 0)
+		feeds = append(feeds, feed.RemotiveFeed{
+			Source: "Remotive",
+			Url:    "http://localhost:8000/remotive.rss",
+		})
 
 		client := &http.Client{
 			Timeout: 10 * time.Second,

@@ -1,4 +1,4 @@
-package source
+package feed
 
 /*
 url: https://remoteok.com/api
