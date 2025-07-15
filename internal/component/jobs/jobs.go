@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/yus-works/job-watcher/internal/source"
 	"github.com/yus-works/job-watcher/internal/fetcher"
+	"github.com/yus-works/job-watcher/internal/source"
 	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
 )
@@ -46,10 +46,11 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 		ctx := req.Context()
 
 		feeds := make([]source.RemotiveFeed, 0)
-		feeds = append(feeds, source.RemotiveFeed {
-			Source: "Remotive",
-			Url: "http://localhost:8000/remotive.rss",
-		})
+		feeds = append(feeds,
+			source.NewRemotiveFeed(
+				"Remotive", "http://localhost:8000/remotive.rss",
+			),
+		)
 
 		itemsCh := fetcher.Stream(ctx, feeds)
 

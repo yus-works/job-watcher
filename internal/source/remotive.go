@@ -9,20 +9,20 @@ import (
 )
 
 type RemotiveFeed struct {
-	Source string
-	Url    string
+	BaseSource
 }
 
-func (f RemotiveFeed) GetUrl() string {
-	return f.Url
-}
-
-func (f RemotiveFeed) GetSource() string {
-	return f.Source
+func NewRemotiveFeed(name, url string) RemotiveFeed {
+	return RemotiveFeed{
+		BaseSource{
+			Source: name,
+			Url:    url,
+		},
+	}
 }
 
 func (f RemotiveFeed) Parse(body io.Reader) ([]Item, error) {
-	parser := gofeed.Parser()
+	parser := gofeed.NewParser()
 
 	feed, err := parser.Parse(body)
 	if err != nil {
