@@ -29,7 +29,7 @@ func Stream[T source.Source](
 	feeds []T,
 	client *http.Client,
 ) <-chan source.Item {
-	out := make(chan source.Item)
+	out := make(chan source.Item, 64)
 
 	var wg sync.WaitGroup
 
