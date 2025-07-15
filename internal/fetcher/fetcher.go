@@ -14,7 +14,7 @@ func fetch[T source.Source](ctx context.Context, c *http.Client, feed T) ([]sour
 	if err != nil {
 		return nil, err
 	}
-	
+
 	resp, err := c.Do(req)
 	if err != nil {
 		return nil, err

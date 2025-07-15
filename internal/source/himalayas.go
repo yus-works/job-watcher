@@ -1,8 +1,8 @@
 package source
 
-/* 
+/*
 url: https://himalayas.app/jobs/api
-type: JSON 
+type: JSON
 options: offset, limit
 details:
 - limit max is 20

@@ -21,7 +21,7 @@ type Job struct {
 
 type JobStore struct {
 	path string
-	db *sql.DB
+	db   *sql.DB
 }
 
 func NewJobStore(path string) (*JobStore, error) {
@@ -33,7 +33,7 @@ func NewJobStore(path string) (*JobStore, error) {
 	db.Exec(`PRAGMA journal_mode = WAL;`)
 	db.Exec(`PRAGMA synchronous = NORMAL;`)
 	return &JobStore{
-		db: db,
+		db:   db,
 		path: path,
 	}, nil
 }
