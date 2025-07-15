@@ -22,7 +22,7 @@ func (f RemotiveFeed) GetSource() string {
 }
 
 func (f RemotiveFeed) Parse(body io.Reader) ([]Item, error) {
-	parser := gofeed.NewParser()
+	parser := gofeed.Parser()
 
 	feed, err := parser.Parse(body)
 	if err != nil {
