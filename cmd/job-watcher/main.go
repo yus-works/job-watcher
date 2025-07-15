@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"html/template"
 	"log"
@@ -48,6 +49,12 @@ func main() {
 	store, err := store.NewJobStore("job-store.db")
 	if err != nil {
 		log.Fatal("Failed to open db")
+	}
+
+	err = store.CreateTables(context.Background())
+	if err != nil {
+		log.Println(err)
+		return
 	}
 
 	tmpl := template.Must(template.ParseGlob("internal/tmpl/*.html"))

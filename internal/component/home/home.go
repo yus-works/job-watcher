@@ -32,13 +32,6 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 		ctx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
 		defer cancel()
 
-		err := st.CreateTables(ctx)
-		if err != nil {
-			http.Error(w, "failed to create jobs table", 500)
-			log.Println(err)
-			return
-		}
-
 		jobs, err := st.GetJobs(ctx, req.URL.Query().Get("search"))
 		if err != nil {
 			http.Error(w, "timeout or db error", 500)
