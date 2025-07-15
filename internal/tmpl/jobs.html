@@ -20,4 +20,14 @@
 	sse-close="done"
 >
 </div>
+
+<div
+	id="jobs-failed"
+	hx-ext="sse"
+
+	sse-connect="/jobs"
+	sse-swap="renderFailed"
+	sse-close="done"
+>
+</div>
 {{ end }}
