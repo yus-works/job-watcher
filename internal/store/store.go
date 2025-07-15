@@ -63,11 +63,15 @@ INSERT OR IGNORE INTO
 	jobs(id,title,url,company)
 VALUES(?,?,?,?);`
 
-	_, err := s.db.ExecContext(ctx, q, j.ID, j.Title, j.URL, j.Company)
+	res, err := s.db.ExecContext(ctx, q, j.ID, j.Title, j.URL, j.Company)
 	if err != nil {
 		log.Println("ERROR: ", err)
 		return err
 	}
+	if n, _ := res.RowsAffected(); n == 0 {
+		log.Printf("duplicate %s", j.ID)
+	}
+
 	return nil
 }
 
