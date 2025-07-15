@@ -1,4 +1,4 @@
-package feed
+package source
 
 /* 
 url: https://himalayas.app/jobs/api

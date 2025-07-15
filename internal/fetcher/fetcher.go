@@ -7,10 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/yus-works/job-watcher/internal/feed"
+	"github.com/yus-works/job-watcher/internal/source"
 )
 
-func fetch[T feed.Feed](ctx context.Context, c *http.Client, feed T) ([]feed.Item, error) {
+func fetch[T source.Feed](ctx context.Context, c *http.Client, feed T) ([]source.Item, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feed.GetUrl(), nil)
 	if err != nil {
 		return nil, err
@@ -25,11 +25,11 @@ func fetch[T feed.Feed](ctx context.Context, c *http.Client, feed T) ([]feed.Ite
 	return feed.Parse(resp.Body)
 }
 
-func Stream[T feed.Feed](
+func Stream[T source.Feed](
 	ctx context.Context,
 	feeds []T,
-) <-chan feed.Item {
-	out := make(chan feed.Item)
+) <-chan source.Item {
+	out := make(chan source.Item)
 
 	client := &http.Client{
 		Timeout: 10 * time.Second,

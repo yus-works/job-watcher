@@ -1,4 +1,4 @@
-package feed
+package source
 
 /* 
 url: https://jobicy.com/api/v2/remote-jobs
