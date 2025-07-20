@@ -57,7 +57,7 @@ func humanAgeGreedy(dur time.Duration) string {
 	return strings.Join(parts, " ")
 }
 
-func parse(currFeed feed.Feed, body io.Reader) ([]feed.Item, error) {
+func parse(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 	parser := gofeed.NewParser()
 
 	items, err := parser.Parse(body)
@@ -77,12 +77,12 @@ func parse(currFeed feed.Feed, body io.Reader) ([]feed.Item, error) {
 			when = *fi.UpdatedParsed
 		}
 
-		title := currFeed.Mapping.Title
+		title := curr.Mapping.Title
 		if fi.Title != "" {
 			title = fi.Title
 		}
 
-		link := currFeed.Mapping.Link
+		link := curr.Mapping.Link
 		if fi.Link != "" {
 			link = fi.Link
 		}
@@ -95,12 +95,12 @@ func parse(currFeed feed.Feed, body io.Reader) ([]feed.Item, error) {
 		}
 
 		out = append(out, feed.Item{
-			Source:   currFeed.Name,
+			Source:   curr.Name,
 			Title:    title,
 			Link:     link,
-			Company:  fi.Custom[currFeed.Mapping.Company],
-			Location: fi.Custom[currFeed.Mapping.Location],
-			Kind:     fi.Custom[currFeed.Mapping.Kind],
+			Company:  fi.Custom[curr.Mapping.Company],
+			Location: fi.Custom[curr.Mapping.Location],
+			Kind:     fi.Custom[curr.Mapping.Kind],
 			Date:     when,
 			Age:      age,
 			AgeStr:   ageStr,
