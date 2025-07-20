@@ -9,7 +9,6 @@ import (
 
 	"github.com/yus-works/job-watcher/internal/feed"
 	"github.com/yus-works/job-watcher/internal/fetcher"
-	"github.com/yus-works/job-watcher/internal/source"
 	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
 )
@@ -47,12 +46,6 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 
 		ctx := req.Context()
 
-		feeds := make([]feed.RemotiveFeed, 0)
-		feeds = append(feeds, feed.RemotiveFeed{
-			Source: "Remotive",
-			Url:    "http://localhost:8000/remotive.rss",
-		})
-
 		client := &http.Client{
 			Timeout: 10 * time.Second,
 			Transport: &http.Transport{
@@ -62,7 +55,7 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 			},
 		}
 
-		itemsCh := fetcher.Stream(ctx, feeds, client)
+		itemsCh := fetcher.Stream(ctx, feed.FEEDS, client)
 
 		for {
 			select {
