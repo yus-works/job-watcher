@@ -29,4 +29,6 @@ type Item struct {
 	Location string
 	Kind     string // fulltime, contract, etc.
 	Date     time.Time
+	Age      time.Duration
+	AgeStr   string
 }

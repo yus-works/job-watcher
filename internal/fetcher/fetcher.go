@@ -6,12 +6,56 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/mmcdole/gofeed"
 	"github.com/yus-works/job-watcher/internal/feed"
 )
+
+func humanAgeGreedy(dur time.Duration) string {
+	if dur <= 0 {
+		return "0h"
+	}
+
+	const (
+		hour       = time.Hour
+		dayHours   = 24 * hour
+		weekHours  = 7 * dayHours
+		monthHours = 30 * dayHours
+	)
+
+	months := dur / monthHours
+	dur -= months * monthHours
+
+	weeks := dur / weekHours
+	dur -= weeks * weekHours
+
+	days := dur / dayHours
+	dur -= days * dayHours
+
+	hours := dur / hour
+
+	parts := make([]string, 0, 4)
+	if months > 0 {
+		parts = append(parts, fmt.Sprintf("%dmo", months))
+	}
+	if weeks > 0 {
+		parts = append(parts, fmt.Sprintf("%dw", weeks))
+	}
+	if days > 0 {
+		parts = append(parts, fmt.Sprintf("%dd", days))
+	}
+	if hours > 0 {
+		parts = append(parts, fmt.Sprintf("%dh", hours))
+	}
+
+	if len(parts) == 0 {
+		return "0h"
+	}
+	return strings.Join(parts, " ")
+}
 
 func parse(currFeed feed.Feed, body io.Reader) ([]feed.Item, error) {
 	parser := gofeed.NewParser()
@@ -22,6 +66,8 @@ func parse(currFeed feed.Feed, body io.Reader) ([]feed.Item, error) {
 	}
 
 	out := make([]feed.Item, 0, len(items.Items))
+
+	now := time.Now()
 
 	for _, fi := range items.Items {
 		when := time.Time{}
@@ -41,6 +87,13 @@ func parse(currFeed feed.Feed, body io.Reader) ([]feed.Item, error) {
 			link = fi.Link
 		}
 
+		var age time.Duration
+		var ageStr string
+		if !when.IsZero() {
+			age = max(now.Sub(when), 0)
+			ageStr = humanAgeGreedy(age)
+		}
+
 		out = append(out, feed.Item{
 			Source:   currFeed.Name,
 			Title:    title,
@@ -49,6 +102,8 @@ func parse(currFeed feed.Feed, body io.Reader) ([]feed.Item, error) {
 			Location: fi.Custom[currFeed.Mapping.Location],
 			Kind:     fi.Custom[currFeed.Mapping.Kind],
 			Date:     when,
+			Age:      age,
+			AgeStr:   ageStr,
 		})
 	}
 
