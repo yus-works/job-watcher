@@ -62,7 +62,7 @@ func parse(currFeed feed.Feed, body io.Reader) ([]feed.Item, error) {
 
 	items, err := parser.Parse(body)
 	if err != nil {
-		return nil, fmt.Errorf("ERROR: parsing feed")
+		return nil, fmt.Errorf("ERROR: parsing feed: %w", err)
 	}
 
 	out := make([]feed.Item, 0, len(items.Items))
