@@ -7,8 +7,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yus-works/job-watcher/internal/feed"
 	"github.com/yus-works/job-watcher/internal/fetcher"
+	"github.com/yus-works/job-watcher/internal/registry"
 	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
 )
@@ -16,7 +16,6 @@ import (
 func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// apis := []string{
-		// 	"https://remotive.com/api/remote-jobs?category=software-dev",
 		// 	"https://remoteok.com/api",
 		// 	"https://jobicy.com/api/v2/remote-jobs?count=100&geo=europe&industry=engineering&tag=Golang",
 		// 	"https://himalayas.app/jobs/api",
@@ -25,9 +24,6 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 		//
 		// feeds := []string{
 		// 	"https://remotive.com/remote-jobs/feed/software-dev",
-		// 	"https://remoteok.com/remote-jobs.rss",
-		// 	"https://jobicy.com/feed/job_feed",
-		// 	"https://himalayas.app/jobs/rss",
 		// 	"https://weworkremotely.com/categories/remote-programming-jobs.rss",
 		// 	"http://rss.infostud.com/poslovi/",
 		// 	"https://profession.hu/allasok?rss",
@@ -55,7 +51,7 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 			},
 		}
 
-		itemsCh := fetcher.Stream(ctx, feed.FEEDS, client)
+		itemsCh := fetcher.Stream(ctx, registry.FEEDS, client)
 
 		for {
 			select {
