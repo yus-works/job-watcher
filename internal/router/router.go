@@ -9,10 +9,27 @@ import (
 	"github.com/yus-works/job-watcher/internal/store"
 )
 
-func RegisterHandlers(
+func NewRouter(t *template.Template, s *store.JobStore) *http.ServeMux {
+	mux := http.NewServeMux()
+
+	registerFS(mux)
+	registerHandlers(mux, t, s)
+
+	return mux
+}
+
+func registerFS(m *http.ServeMux) {
+	fs := http.FileServer(http.Dir("./static"))
+	m.Handle("/static/",
+		http.StripPrefix("/static/", fs),
+	)
+}
+
+func registerHandlers(
+	m *http.ServeMux,
 	t *template.Template,
 	s *store.JobStore,
 ) {
-	http.HandleFunc("/", home.Register(t, s))
-	http.HandleFunc("/jobs", jobs.Register(t, s))
+	m.HandleFunc("/", home.Register(t, s))
+	m.HandleFunc("/jobs", jobs.Register(t, s))
 }

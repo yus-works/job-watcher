@@ -1,8 +1,8 @@
 package feed
 
-/* 
+/*
 url: https://jobicy.com/api/v2/remote-jobs
-type: JSON 
+type: JSON
 options: count, geo, industry, tag
 details:
 - count max is 100

@@ -5,9 +5,10 @@ import (
 	"html/template"
 	"net/http"
 	"strings"
+	"time"
 
-	"github.com/yus-works/job-watcher/internal/feed"
 	"github.com/yus-works/job-watcher/internal/fetcher"
+	"github.com/yus-works/job-watcher/internal/registry"
 	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
 )
@@ -15,7 +16,6 @@ import (
 func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// apis := []string{
-		// 	"https://remotive.com/api/remote-jobs?category=software-dev",
 		// 	"https://remoteok.com/api",
 		// 	"https://jobicy.com/api/v2/remote-jobs?count=100&geo=europe&industry=engineering&tag=Golang",
 		// 	"https://himalayas.app/jobs/api",
@@ -24,9 +24,6 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 		//
 		// feeds := []string{
 		// 	"https://remotive.com/remote-jobs/feed/software-dev",
-		// 	"https://remoteok.com/remote-jobs.rss",
-		// 	"https://jobicy.com/feed/job_feed",
-		// 	"https://himalayas.app/jobs/rss",
 		// 	"https://weworkremotely.com/categories/remote-programming-jobs.rss",
 		// 	"http://rss.infostud.com/poslovi/",
 		// 	"https://profession.hu/allasok?rss",
@@ -45,13 +42,16 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 
 		ctx := req.Context()
 
-		feeds := make([]feed.RemotiveFeed, 0)
-		feeds = append(feeds, feed.RemotiveFeed {
-			Source: "Remotive",
-			Url: "http://localhost:8000/remotive.rss",
-		})
+		client := &http.Client{
+			Timeout: 10 * time.Second,
+			Transport: &http.Transport{
+				MaxIdleConns:       100,
+				IdleConnTimeout:    90 * time.Second,
+				DisableCompression: false,
+			},
+		}
 
-		itemsCh := fetcher.Stream(ctx, feeds)
+		itemsCh := fetcher.Stream(ctx, registry.FEEDS, client)
 
 		for {
 			select {
@@ -63,7 +63,16 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 					return
 				}
 
-				html := tmpl.Render(tl, "card", it)
+				html, err := tmpl.Render(tl, "card", it)
+				if err != nil {
+					fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", html)
+					flusher.Flush()
+
+					fmt.Fprint(w, "event: done\ndata: bye\n\n")
+					flusher.Flush()
+					return
+				}
+
 				fmt.Fprintf(
 					w,
 					"event: foundJobs\ndata: %s\n\n",
