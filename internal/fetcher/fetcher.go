@@ -3,18 +3,16 @@ package fetcher
 import (
 	"context"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/mmcdole/gofeed"
 	"github.com/yus-works/job-watcher/internal/feed"
 )
 
-func humanAgeGreedy(dur time.Duration) string {
+func HumanAgeGreedy(dur time.Duration) string {
 	if dur <= 0 {
 		return "0h"
 	}
@@ -57,61 +55,8 @@ func humanAgeGreedy(dur time.Duration) string {
 	return strings.Join(parts, " ")
 }
 
-func parse(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
-	parser := gofeed.NewParser()
-
-	items, err := parser.Parse(body)
-	if err != nil {
-		return nil, fmt.Errorf("ERROR: parsing feed: %w", err)
-	}
-
-	out := make([]feed.Item, 0, len(items.Items))
-
-	now := time.Now()
-
-	for _, fi := range items.Items {
-		when := time.Time{}
-		if fi.PublishedParsed != nil {
-			when = *fi.PublishedParsed
-		} else if fi.UpdatedParsed != nil {
-			when = *fi.UpdatedParsed
-		}
-
-		title := curr.Mapping.Title
-		if fi.Title != "" {
-			title = fi.Title
-		}
-
-		link := curr.Mapping.Link
-		if fi.Link != "" {
-			link = fi.Link
-		}
-
-		var age time.Duration
-		var ageStr string
-		if !when.IsZero() {
-			age = max(now.Sub(when), 0)
-			ageStr = humanAgeGreedy(age)
-		}
-
-		out = append(out, feed.Item{
-			Source:   curr.Name,
-			Title:    title,
-			Link:     link,
-			Company:  fi.Custom[curr.Mapping.Company],
-			Location: fi.Custom[curr.Mapping.Location],
-			Kind:     fi.Custom[curr.Mapping.Kind],
-			Date:     when,
-			Age:      age,
-			AgeStr:   ageStr,
-		})
-	}
-
-	return out, nil
-}
-
 func fetch(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.Item, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feed.URL, nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feed.URL(), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -122,7 +67,7 @@ func fetch(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.Item, er
 	}
 	defer resp.Body.Close()
 
-	return parse(feed, resp.Body)
+	return feed.Parse(resp.Body)
 }
 
 func Stream(
@@ -142,9 +87,10 @@ func Stream(
 		go func() {
 			defer wg.Done()
 
+			// TODO: move parsing to separate func call
 			items, err := fetch(ctx, client, feed)
 			if err != nil {
-				log.Printf("fetch %s: %v", feed.URL, err)
+				log.Printf("fetch %s: %v", feed.URL(), err)
 				return
 			}
 
