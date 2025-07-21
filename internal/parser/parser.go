@@ -14,7 +14,7 @@ import (
 func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, error) {
 	out := make([]feed.Item, 0, len(objs))
 	now := time.Now()
-	m := curr.Mapping()
+	m := curr.Mapping
 
 	for _, obj := range objs {
 		title := getString(obj, append([]string{m.TitleField}, titleFallbacks...)...)
@@ -31,7 +31,7 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 		}
 
 		item := feed.Item{
-			Source:   curr.Name(),
+			Source:   curr.Name,
 			Title:    title,
 			Link:     link,
 			Company:  company,
@@ -81,12 +81,12 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			when = *fi.UpdatedParsed
 		}
 
-		title := curr.Mapping().TitleField
+		title := curr.Mapping.TitleField
 		if fi.Title != "" {
 			title = fi.Title
 		}
 
-		link := curr.Mapping().LinkField
+		link := curr.Mapping.LinkField
 		if fi.Link != "" {
 			link = fi.Link
 		}
@@ -98,18 +98,18 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			ageStr = HumanAgeGreedy(age)
 		}
 
-		jobTypeStr := fi.Custom[curr.Mapping().KindField]
+		jobTypeStr := fi.Custom[curr.Mapping.KindField]
 		jobType, err := feed.ParseJobType(jobTypeStr)
 		if err != nil {
 			log.Println("Failed to parse jobTypeStr: ", err)
 		}
 
 		out = append(out, feed.Item{
-			Source:   curr.Name(),
+			Source:   curr.Name,
 			Title:    title,
 			Link:     link,
-			Company:  fi.Custom[curr.Mapping().CompanyField],
-			Location: fi.Custom[curr.Mapping().LocationField],
+			Company:  fi.Custom[curr.Mapping.CompanyField],
+			Location: fi.Custom[curr.Mapping.LocationField],
 			JobType:  jobType,
 			Date:     when,
 			Age:      age,

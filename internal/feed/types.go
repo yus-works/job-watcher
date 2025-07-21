@@ -21,36 +21,10 @@ type ItemMap struct {
 }
 
 type Feed struct {
-	name    string
-	url     string
-	mapping ItemMap
-	parser  func(curr Feed, body io.Reader) ([]Item, error)
-}
-
-func (f Feed) Name() string {
-	return f.name
-}
-func (f Feed) URL() string {
-	return f.url
-}
-func (f Feed) Mapping() ItemMap {
-	return f.mapping
-}
-func (f Feed) Parse(body io.Reader) ([]Item, error) {
-	return f.parser(f, body)
-}
-
-func NewFeed(
-	name, url string,
-	mapping ItemMap,
-	parser func(curr Feed, body io.Reader) ([]Item, error),
-) Feed {
-	return Feed{
-		name:    name,
-		url:     url,
-		mapping: mapping,
-		parser:  parser,
-	}
+	Name    string
+	URL     string
+	Mapping ItemMap
+	Parse   func(curr Feed, body io.Reader) ([]Item, error)
 }
 
 type JobType string

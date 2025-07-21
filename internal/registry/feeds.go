@@ -10,16 +10,16 @@ import (
 )
 
 var FEEDS = []feed.Feed{
-	feed.NewFeed(
-		"Remotive",
-		"http://localhost:8000/remotive.rss",
-		feed.ItemMap{
+	{
+		Name: "Remotive",
+		URL:  "http://localhost:8000/remotive.rss",
+		Mapping: feed.ItemMap{
 			CompanyField:  "company",
 			LocationField: "location",
 			KindField:     "type",
 		},
-		parser.ParseRSS,
-	),
+		Parse: parser.ParseRSS,
+	},
 
 	/*
 		https://remoteok.com/api
@@ -36,16 +36,16 @@ var FEEDS = []feed.Feed{
 		- url
 		info: cant find
 	*/
-	feed.NewFeed(
-		"RemoteOK",
-		"http://localhost:8000/remoteok.json",
-		feed.ItemMap{
+	{
+		Name: "RemoteOK",
+		URL:  "http://localhost:8000/remoteok.json",
+		Mapping: feed.ItemMap{
 			TitleField:    "position",
 			CompanyField:  "company",
 			LocationField: "location",
 			KindField:     "type",
 		},
-		func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
+		Parse: func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			var rawItems = make([]map[string]json.RawMessage, 0)
 			dec := json.NewDecoder(body)
 
@@ -60,5 +60,5 @@ var FEEDS = []feed.Feed{
 
 			return items[1:], nil
 		},
-	),
+	},
 }

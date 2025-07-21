@@ -56,7 +56,7 @@ func HumanAgeGreedy(dur time.Duration) string {
 }
 
 func fetch(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.Item, error) {
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feed.URL(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feed.URL, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -67,7 +67,7 @@ func fetch(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.Item, er
 	}
 	defer resp.Body.Close()
 
-	return feed.Parse(resp.Body)
+	return feed.Parse(feed, resp.Body)
 }
 
 func Stream(
@@ -90,7 +90,7 @@ func Stream(
 			// TODO: move parsing to separate func call
 			items, err := fetch(ctx, client, feed)
 			if err != nil {
-				log.Printf("fetch %s: %v", feed.URL(), err)
+				log.Printf("fetch %s: %v", feed.URL, err)
 				return
 			}
 
