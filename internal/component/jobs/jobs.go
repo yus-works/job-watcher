@@ -63,9 +63,9 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 					return
 				}
 
-				html, err := tmpl.Render(tl, "card", it)
+				card, err := tmpl.Render(tl, "card", NewDisplayItem(it))
 				if err != nil {
-					fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", html)
+					fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", card)
 					flusher.Flush()
 
 					fmt.Fprint(w, "event: done\ndata: bye\n\n")
@@ -76,7 +76,7 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 				fmt.Fprintf(
 					w,
 					"event: foundJobs\ndata: %s\n\n",
-					strings.ReplaceAll(html, "\n", ""),
+					strings.ReplaceAll(card, "\n", ""),
 				)
 				flusher.Flush()
 

@@ -1,34 +1,40 @@
 {{ define "card" }}
 <div class="job-card">
-	<h2><a href="{{ .Link }}">{{ .Title }}</a></h2>
-	<h3><a href="{{ .Link }}">{{ .Source }}</a></h2>
-	{{ with .Location }}<p><strong>Location:</strong> {{ . }}</p>{{ end }}
-	{{ with .Company }}<p><strong>Company:</strong> {{ . }}</p>{{ end }}
-	{{ with .JobTypeStr }}<p><strong>Job Type:</strong> {{ . }}</p>{{ end }}
-	{{ with .Date }}<p><strong>Date:</strong> {{ . }}</p>{{ end }}
-	{{ with .AgeStr }}<p><strong>Age:</strong> {{ . }}</p>{{ end }}
+	<div class="container">
+		<div class="job-card-header">
+			<h2><a href="{{ .Link }}">{{ .Title }} | {{ .Company }}</a></h2>
+			<span class="source">{{ .Source }}</span>
+		</div>
+
+		<div class="posted">
+			<h2 class="age"> {{ .Age }} </h2>
+			<h2 class="date"> {{ .Date }} </h2>
+		</div>
+	</div>
+
+	<div class="tags">
+		{{ with .Location }}<span class="tag tag--location">{{ . }}</span>{{ end }}
+		{{ with .JobType }}<span class="tag tag--type">{{ . }}</span>{{ end }}
+		{{ range .Tags }}<span class="tag tag--extra">{{ . }}</span>{{ end }}
+	</div>
 </div>
 {{ end }}
 
 {{ define "jobs" }}
-<div
+<ul
 	id="job-list"
 	hx-swap="afterbegin"
 	hx-ext="sse"
-
 	sse-connect="/jobs"
 	sse-swap="foundJobs"
 	sse-close="done"
->
-</div>
+></ul>
 
 <div
 	id="jobs-failed"
 	hx-ext="sse"
-
 	sse-connect="/jobs"
 	sse-swap="renderFailed"
 	sse-close="done"
->
-</div>
+></div>
 {{ end }}
