@@ -12,8 +12,11 @@
 		</div>
 	</div>
 
-	{{ with .Location }}<p><strong>Location:</strong> {{ . }}</p>{{ end }}
-	{{ with .JobType }}<p><strong>Job Type:</strong> {{ . }}</p>{{ end }}
+	<div class="tags">
+		{{ with .Location }}<span class="tag tag--location">{{ . }}</span>{{ end }}
+		{{ with .JobType }}<span class="tag tag--type">{{ . }}</span>{{ end }}
+		{{ range .Tags }}<span class="tag tag--extra">{{ . }}</span>{{ end }}
+	</div>
 </div>
 {{ end }}
 

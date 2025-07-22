@@ -61,7 +61,7 @@ a:hover {
 
 @media (max-width: 600px) {
 	.filters {
-		flex-direction: column;
+	flex-direction: column;
 	}
 }
 
@@ -124,4 +124,34 @@ a:hover {
 
 .job-card .posted .date {
 	font-size: 0.9rem;
+}
+
+.tags {
+	display: flex;
+	gap: 0.5rem;
+	flex-wrap: wrap;
+	margin-top: 0.5rem;
+}
+
+.tag {
+	font-size: 0.75rem;
+	padding: 0.15rem 0.6rem;
+	border-radius: 9999px;
+	font-weight: 500;
+	line-height: 1.4;
+}
+
+.tag--location {
+	background: rgba(3, 218, 198, 0.15);
+	color: var(--secondary-color);
+}
+
+.tag--type {
+	background: rgba(187, 134, 252, 0.15);
+	color: var(--primary-color);
+}
+
+.tag--extra {
+	background: rgba(255, 255, 255, 0.1);
+	color: var(--text-color);
 }
