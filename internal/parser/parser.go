@@ -37,9 +37,8 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 			Company:  company,
 			Location: location,
 
-			Date:   when.Local(),
-			Age:    age,
-			AgeStr: HumanAgeGreedy(age),
+			Date: when.Local(),
+			Age:  age,
 		}
 
 		if jobTypeStr != "" {
@@ -49,7 +48,6 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 			}
 
 			item.JobType = jobType
-			item.JobTypeStr = string(jobType)
 		}
 
 		if len(tags) > 0 {
@@ -92,10 +90,8 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 		}
 
 		var age time.Duration
-		var ageStr string
 		if !when.IsZero() {
 			age = max(now.Sub(when), 0)
-			ageStr = HumanAgeGreedy(age)
 		}
 
 		jobTypeStr := fi.Custom[curr.Mapping.KindField]
@@ -113,7 +109,6 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			JobType:  jobType,
 			Date:     when,
 			Age:      age,
-			AgeStr:   ageStr,
 		})
 	}
 
