@@ -64,13 +64,17 @@ type Item struct {
 	Company  string
 	Location string
 
-	JobType    JobType
-	JobTypeStr string
+	JobType JobType
+	Date    time.Time
+	Age     time.Duration
 
 	// TODO: some kind of tag enum/normalization
 	Tags []string
+}
 
-	Date   time.Time
-	Age    time.Duration
-	AgeStr string
+type DisplayItem struct {
+	Item
+	JobType string
+	Date    string
+	Age     string
 }
