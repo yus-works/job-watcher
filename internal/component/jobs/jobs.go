@@ -63,7 +63,7 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 					return
 				}
 
-				card, err := tmpl.Render(tl, "card", it)
+				card, err := tmpl.Render(tl, "card", NewDisplayItem(it))
 				if err != nil {
 					fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", card)
 					flusher.Flush()
