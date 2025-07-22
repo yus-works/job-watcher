@@ -71,10 +71,3 @@ type Item struct {
 	// TODO: some kind of tag enum/normalization
 	Tags []string
 }
-
-type DisplayItem struct {
-	Item
-	JobType string
-	Date    string
-	Age     string
-}
