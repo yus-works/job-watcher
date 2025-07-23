@@ -3,9 +3,14 @@ package feed
 import (
 	"fmt"
 	"regexp"
+	"strings"
 )
 
 var ignoreNonLetters = regexp.MustCompile(`[^A-Za-z]+`)
+
+func normalize(s string) string {
+	return strings.ToLower(ignoreNonLetters.ReplaceAllString(s, ""))
+}
 
 type JobType string
 
@@ -19,7 +24,7 @@ const (
 
 // ParseJobType normalizes s (drops non‑letters) and returns the matching JobType.
 func ParseJobType(s string) (JobType, error) {
-	jobType := ignoreNonLetters.ReplaceAllString(s, "")
+	jobType := normalize(s)
 
 	switch jobType {
 	case "fulltime":
@@ -47,12 +52,12 @@ const (
 
 // ParseSeniority normalizes s (drops non‑letters) and returns the matching Seniority.
 func ParseSeniority(s string) (Seniority, error) {
-	seniority := ignoreNonLetters.ReplaceAllString(s, "")
+	seniority := normalize(s)
 
 	switch seniority {
 	case "intern":
 		return Intern, nil
-	case "junior":
+	case "junior", "entrylevel", "entryleveljunior":
 		return Junior, nil
 	case "medior", "intermediate", "midweight":
 		return Medior, nil
