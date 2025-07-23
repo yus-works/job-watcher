@@ -5,17 +5,17 @@ import (
 	"regexp"
 )
 
+var ignoreNonLetters = regexp.MustCompile(`[^A-Za-z]+`)
+
 type JobType string
 
 const (
-	Unknown    JobType = ""
-	FullTime   JobType = "fulltime"
-	PartTime   JobType = "parttime"
-	Contract   JobType = "contract"
-	Internship JobType = "internship"
+	UnknownJobType JobType = ""
+	FullTime       JobType = "fulltime"
+	PartTime       JobType = "parttime"
+	Contract       JobType = "contract"
+	Internship     JobType = "internship"
 )
-
-var ignoreNonLetters = regexp.MustCompile(`[^A-Za-z]+`)
 
 // ParseJobType normalizes s (drops non‑letters) and returns the matching JobType.
 func ParseJobType(s string) (JobType, error) {
@@ -31,6 +31,34 @@ func ParseJobType(s string) (JobType, error) {
 	case "internship":
 		return Internship, nil
 	default:
-		return Unknown, fmt.Errorf("Failed to parse (%s)", s)
+		return UnknownJobType, fmt.Errorf("Failed to parse (%s)", s)
+	}
+}
+
+type Seniority string
+
+const (
+	UnknownSeniority           = ""
+	Intern           Seniority = "intern"
+	Junior           Seniority = "junior"
+	Medior           Seniority = "medior"
+	Senior           Seniority = "senior"
+)
+
+// ParseSeniority normalizes s (drops non‑letters) and returns the matching Seniority.
+func ParseSeniority(s string) (Seniority, error) {
+	seniority := ignoreNonLetters.ReplaceAllString(s, "")
+
+	switch seniority {
+	case "intern":
+		return Intern, nil
+	case "junior":
+		return Junior, nil
+	case "medior":
+		return Medior, nil
+	case "senior":
+		return Senior, nil
+	default:
+		return UnknownSeniority, fmt.Errorf("Failed to parse (%s)", s)
 	}
 }

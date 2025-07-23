@@ -33,9 +33,10 @@ type Item struct {
 	Company  string
 	Location string
 
-	JobType JobType
-	Date    time.Time
-	Age     time.Duration
+	Seniority Seniority
+	JobType   JobType
+	Date      time.Time
+	Age       time.Duration
 
 	// TODO: some kind of tag enum/normalization
 	Tags []string
