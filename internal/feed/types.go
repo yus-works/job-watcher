@@ -18,6 +18,7 @@ type ItemMap struct {
 	CompanyField  string
 	LocationField string
 	KindField     string
+	DateField     string
 }
 
 type Feed struct {
