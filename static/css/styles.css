@@ -146,6 +146,11 @@ a:hover {
 	color: var(--secondary-color);
 }
 
+.tag--seniority {
+	background: rgba(222, 134, 152, 0.15);
+	color: var(--primary-color);
+}
+
 .tag--type {
 	background: rgba(187, 134, 252, 0.15);
 	color: var(--primary-color);
