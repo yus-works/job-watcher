@@ -16,14 +16,11 @@ import (
 func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// apis := []string{
-		// 	"https://remoteok.com/api",
-		// 	"https://jobicy.com/api/v2/remote-jobs?count=100&geo=europe&industry=engineering&tag=Golang",
 		// 	"https://himalayas.app/jobs/api",
 		// 	"https://www.arbeitnow.com/api/job-board-api",
 		// }
 		//
 		// feeds := []string{
-		// 	"https://remotive.com/remote-jobs/feed/software-dev",
 		// 	"https://weworkremotely.com/categories/remote-programming-jobs.rss",
 		// 	"http://rss.infostud.com/poslovi/",
 		// 	"https://profession.hu/allasok?rss",
