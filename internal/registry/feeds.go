@@ -47,4 +47,32 @@ var FEEDS = []feed.Feed{
 			return items[1:], nil
 		},
 	},
+	{
+		Name: "Jobicy",
+		// TODO: url: https://jobicy.com/api/v2/remote-jobs
+		URL: "http://localhost:8000/jobicy.json",
+		Mapping: feed.ItemMap{
+			TitleField:    "jobTitle",
+			CompanyField:  "companyName",
+			LocationField: "jobGeo",
+			KindField:     "jobType",
+		},
+		Parse: func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
+			var payload = struct {
+				Jobs []map[string]json.RawMessage `json:"jobs"`
+			}{}
+
+			dec := json.NewDecoder(body)
+			if err := dec.Decode(&payload); err != nil {
+				return nil, fmt.Errorf("Failed to decode body: %w", err)
+			}
+
+			items, err := parser.ParseJSON(curr, payload.Jobs)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to parse: %w", err)
+			}
+
+			return items, nil
+		},
+	},
 }
