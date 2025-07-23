@@ -31,7 +31,7 @@ func ParseJobType(s string) (JobType, error) {
 		return FullTime, nil
 	case "parttime":
 		return PartTime, nil
-	case "contract":
+	case "contract", "contractor":
 		return Contract, nil
 	case "internship":
 		return Internship, nil
