@@ -77,4 +77,36 @@ var FEEDS = []feed.Feed{
 			return items, nil
 		},
 	},
+	{
+		Name: "Himalayas",
+		// TODO: url: "https://himalayas.app/jobs/api"
+		URL: "http://localhost:8000/himalayas.json",
+		Mapping: feed.ItemMap{
+			TitleField:     "title",
+			CompanyField:   "companyName",
+			LocationField:  "locationRestrictions",
+			JobTypeField:   "employmentType",
+			SeniorityField: "seniority",
+
+			// NOTE: Himalayas date is last updated, not first time posted
+			DateField: "pubDate",
+		},
+		Parse: func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
+			var payload = struct {
+				Jobs []map[string]json.RawMessage `json:"jobs"`
+			}{}
+
+			dec := json.NewDecoder(body)
+			if err := dec.Decode(&payload); err != nil {
+				return nil, fmt.Errorf("Failed to decode body: %w", err)
+			}
+
+			items, err := parser.ParseJSON(curr, payload.Jobs)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to parse: %w", err)
+			}
+
+			return items, nil
+		},
+	},
 }

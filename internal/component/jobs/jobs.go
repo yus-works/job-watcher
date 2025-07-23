@@ -16,7 +16,6 @@ import (
 func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// apis := []string{
-		// 	"https://himalayas.app/jobs/api",
 		// 	"https://www.arbeitnow.com/api/job-board-api",
 		// }
 		//
