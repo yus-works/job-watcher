@@ -22,7 +22,7 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 		company := getString(obj, append([]string{m.CompanyField}, companyFallbacks...)...)
 		location := getString(obj, append([]string{m.LocationField}, locationFallbacks...)...)
 		seniorityStr := getString(obj, append([]string{m.SeniorityField}, seniorityFallbacks...)...)
-		jobTypeStr := getString(obj, append([]string{m.KindField}, kindFallbacks...)...)
+		jobTypeStr := getString(obj, append([]string{m.JobTypeField}, kindFallbacks...)...)
 		tags := getStringSlice(obj, "tags", "technologies", "skills")
 
 		when := getEpoch(obj, append([]string{m.DateField}, epochFallbacks...)...)
@@ -104,7 +104,7 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			age = max(now.Sub(when), 0)
 		}
 
-		jobTypeStr := fi.Custom[curr.Mapping.KindField]
+		jobTypeStr := fi.Custom[curr.Mapping.JobTypeField]
 		jobType, err := feed.ParseJobType(jobTypeStr)
 		if err != nil {
 			log.Println("Failed to parse jobTypeStr: ", err)

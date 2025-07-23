@@ -17,7 +17,7 @@ var FEEDS = []feed.Feed{
 		Mapping: feed.ItemMap{
 			CompanyField:  "company",
 			LocationField: "location",
-			KindField:     "type",
+			JobTypeField:  "type",
 		},
 		Parse: parser.ParseRSS,
 	},
@@ -29,7 +29,7 @@ var FEEDS = []feed.Feed{
 			TitleField:    "position",
 			CompanyField:  "company",
 			LocationField: "location",
-			KindField:     "type",
+			JobTypeField:  "type",
 		},
 		Parse: func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			var rawItems = make([]map[string]json.RawMessage, 0)
@@ -55,7 +55,7 @@ var FEEDS = []feed.Feed{
 			TitleField:     "jobTitle",
 			CompanyField:   "companyName",
 			LocationField:  "jobGeo",
-			KindField:      "jobType",
+			JobTypeField:   "jobType",
 			DateField:      "pubDate",
 			SeniorityField: "jobLevel",
 		},

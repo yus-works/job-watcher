@@ -16,7 +16,7 @@ type ItemMap struct {
 	CompanyField   string
 	LocationField  string
 	SeniorityField string
-	KindField      string
+	JobTypeField   string
 	DateField      string
 }
 
