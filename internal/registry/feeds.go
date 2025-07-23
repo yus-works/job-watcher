@@ -11,6 +11,7 @@ import (
 
 var FEEDS = []feed.Feed{
 	{
+		// TODO: "https://remotive.com/api/remote-jobs?category=software-dev",
 		Name: "Remotive",
 		URL:  "http://localhost:8000/remotive.rss",
 		Mapping: feed.ItemMap{
@@ -20,25 +21,10 @@ var FEEDS = []feed.Feed{
 		},
 		Parse: parser.ParseRSS,
 	},
-
-	/*
-		https://remoteok.com/api
-		type: JSON
-		structure:
-		- list of objects
-		- first object is info
-		relevant fields:
-		- epoch
-		- company
-		- position
-		- tags
-		- location
-		- url
-		info: cant find
-	*/
 	{
 		Name: "RemoteOK",
-		URL:  "http://localhost:8000/remoteok.json",
+		// TODO: change to https://remoteok.com/api
+		URL: "http://localhost:8000/remoteok.json",
 		Mapping: feed.ItemMap{
 			TitleField:    "position",
 			CompanyField:  "company",
