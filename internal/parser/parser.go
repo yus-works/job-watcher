@@ -21,6 +21,7 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 		link := getString(obj, append([]string{m.LinkField}, linkFallbacks...)...)
 		company := getString(obj, append([]string{m.CompanyField}, companyFallbacks...)...)
 		location := getString(obj, append([]string{m.LocationField}, locationFallbacks...)...)
+		seniorityStr := getString(obj, append([]string{m.SeniorityField}, seniorityFallbacks...)...)
 		jobTypeStr := getString(obj, append([]string{m.KindField}, kindFallbacks...)...)
 		tags := getStringSlice(obj, "tags", "technologies", "skills")
 
@@ -48,6 +49,15 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 			}
 
 			item.JobType = jobType
+		}
+
+		if seniorityStr != "" {
+			seniority, err := feed.ParseSeniority(seniorityStr)
+			if err != nil {
+				log.Println("Failed to parse seniorityStr: ", err)
+			}
+
+			item.Seniority = seniority
 		}
 
 		if len(tags) > 0 {

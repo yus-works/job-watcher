@@ -52,11 +52,12 @@ var FEEDS = []feed.Feed{
 		// TODO: url: https://jobicy.com/api/v2/remote-jobs
 		URL: "http://localhost:8000/jobicy.json",
 		Mapping: feed.ItemMap{
-			TitleField:    "jobTitle",
-			CompanyField:  "companyName",
-			LocationField: "jobGeo",
-			KindField:     "jobType",
-			DateField:     "pubDate",
+			TitleField:     "jobTitle",
+			CompanyField:   "companyName",
+			LocationField:  "jobGeo",
+			KindField:      "jobType",
+			DateField:      "pubDate",
+			SeniorityField: "jobLevel",
 		},
 		Parse: func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			var payload = struct {

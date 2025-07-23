@@ -11,12 +11,13 @@ import (
 // Common fields like Title and URL can usually be omitted because the parser
 // can usually pick those up automatically
 type ItemMap struct {
-	TitleField    string
-	LinkField     string
-	CompanyField  string
-	LocationField string
-	KindField     string
-	DateField     string
+	TitleField     string
+	LinkField      string
+	CompanyField   string
+	LocationField  string
+	SeniorityField string
+	KindField      string
+	DateField      string
 }
 
 type Feed struct {
