@@ -48,6 +48,7 @@ const (
 	Junior           Seniority = "junior"
 	Medior           Seniority = "medior"
 	Senior           Seniority = "senior"
+	Director         Seniority = "senior"
 )
 
 // ParseSeniority normalizes s (drops non‑letters) and returns the matching Seniority.
@@ -63,6 +64,10 @@ func ParseSeniority(s string) (Seniority, error) {
 		return Medior, nil
 	case "senior":
 		return Senior, nil
+	case "director":
+		return Director, nil
+	case "any":
+		return UnknownSeniority, nil
 	default:
 		return UnknownSeniority, fmt.Errorf("Failed to parse (%s)", s)
 	}
