@@ -54,7 +54,7 @@ func ParseSeniority(s string) (Seniority, error) {
 		return Intern, nil
 	case "junior":
 		return Junior, nil
-	case "medior":
+	case "medior", "intermediate", "midweight":
 		return Medior, nil
 	case "senior":
 		return Senior, nil
