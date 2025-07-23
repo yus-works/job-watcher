@@ -24,7 +24,7 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 		jobTypeStr := getString(obj, append([]string{m.KindField}, kindFallbacks...)...)
 		tags := getStringSlice(obj, "tags", "technologies", "skills")
 
-		when := getEpoch(obj, "epoch", "timestamp", "time", "published", "postedAt", "date", "created_at", "published_at")
+		when := getEpoch(obj, append([]string{m.DateField}, epochFallbacks...)...)
 		age := time.Duration(0)
 		if !when.IsZero() {
 			age = now.Sub(when)

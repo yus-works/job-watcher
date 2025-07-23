@@ -56,6 +56,7 @@ var FEEDS = []feed.Feed{
 			CompanyField:  "companyName",
 			LocationField: "jobGeo",
 			KindField:     "jobType",
+			DateField:     "pubDate",
 		},
 		Parse: func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			var payload = struct {
