@@ -5,28 +5,6 @@ import (
 	"time"
 )
 
-// Struct used to tell the parser what the names of the required fields are in
-// each feed
-//
-// Common fields like Title and URL can usually be omitted because the parser
-// can usually pick those up automatically
-type ItemMap struct {
-	TitleField     string
-	LinkField      string
-	CompanyField   string
-	LocationField  string
-	SeniorityField string
-	JobTypeField   string
-	DateField      string
-}
-
-type Feed struct {
-	Name    string
-	URL     string
-	Mapping ItemMap
-	Parse   func(curr Feed, body io.Reader) ([]Item, error)
-}
-
 type Item struct {
 	Source   string
 	Title    string
@@ -41,4 +19,11 @@ type Item struct {
 
 	// TODO: some kind of tag enum/normalization
 	Tags []string
+}
+
+type Feed struct {
+	Name   string
+	URL    string
+	Mapper Mapper
+	Parse  func(curr Feed, body io.Reader) ([]Item, error)
 }
