@@ -21,10 +21,11 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 		link := getString(obj, append([]string{m.LinkField}, linkFallbacks...)...)
 		company := getString(obj, append([]string{m.CompanyField}, companyFallbacks...)...)
 		location := getString(obj, append([]string{m.LocationField}, locationFallbacks...)...)
-		jobTypeStr := getString(obj, append([]string{m.KindField}, kindFallbacks...)...)
+		seniorityStr := getString(obj, append([]string{m.SeniorityField}, seniorityFallbacks...)...)
+		jobTypeStr := getString(obj, append([]string{m.JobTypeField}, kindFallbacks...)...)
 		tags := getStringSlice(obj, "tags", "technologies", "skills")
 
-		when := getEpoch(obj, "epoch", "timestamp", "time", "published", "postedAt", "date", "created_at", "published_at")
+		when := getEpoch(obj, append([]string{m.DateField}, epochFallbacks...)...)
 		age := time.Duration(0)
 		if !when.IsZero() {
 			age = now.Sub(when)
@@ -48,6 +49,15 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 			}
 
 			item.JobType = jobType
+		}
+
+		if seniorityStr != "" {
+			seniority, err := feed.ParseSeniority(seniorityStr)
+			if err != nil {
+				log.Println("Failed to parse seniorityStr: ", err)
+			}
+
+			item.Seniority = seniority
 		}
 
 		if len(tags) > 0 {
@@ -94,22 +104,27 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			age = max(now.Sub(when), 0)
 		}
 
-		jobTypeStr := fi.Custom[curr.Mapping.KindField]
-		jobType, err := feed.ParseJobType(jobTypeStr)
-		if err != nil {
-			log.Println("Failed to parse jobTypeStr: ", err)
-		}
-
-		out = append(out, feed.Item{
+		item := feed.Item{
 			Source:   curr.Name,
 			Title:    title,
 			Link:     link,
 			Company:  fi.Custom[curr.Mapping.CompanyField],
 			Location: fi.Custom[curr.Mapping.LocationField],
-			JobType:  jobType,
 			Date:     when,
 			Age:      age,
-		})
+		}
+
+		jobTypeStr := fi.Custom[curr.Mapping.JobTypeField]
+		if jobTypeStr != "" {
+			jobType, err := feed.ParseJobType(jobTypeStr)
+			if err != nil {
+				log.Println("Failed to parse jobTypeStr: ", err)
+			}
+
+			item.JobType = jobType
+		}
+
+		out = append(out, item)
 	}
 
 	return out, nil

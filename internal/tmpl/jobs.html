@@ -14,6 +14,7 @@
 
 	<div class="tags">
 		{{ with .Location }}<span class="tag tag--location">{{ . }}</span>{{ end }}
+		{{ with .Seniority }}<span class="tag tag--level">{{ . }}</span>{{ end }}
 		{{ with .JobType }}<span class="tag tag--type">{{ . }}</span>{{ end }}
 		{{ range .Tags }}<span class="tag tag--extra">{{ . }}</span>{{ end }}
 	</div>
