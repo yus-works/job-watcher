@@ -10,44 +10,33 @@ import (
 	"github.com/mmcdole/gofeed"
 )
 
+func makeExtractor(
+	o map[string]json.RawMessage,
+) func(val, field string) string {
+	// returns a closure that has o baked in
+	return func(val, field string) string {
+		return getString(
+			o,
+			append([]string{val}, getFallbacks(field)...)...,
+		)
+	}
+}
+
 func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
 	out := make([]Item, 0, len(objs))
 	now := time.Now()
 	m := curr.Mapper
 
 	for _, obj := range objs {
-		o := obj
+		objCopy := obj
 
-		title := m.Title(func(val, field string) string {
-			return getString(
-				o, append([]string{val}, getFallbacks(field)...)...,
-			)
-		})
-		link := m.Link(func(val, field string) string {
-			return getString(
-				o, append([]string{val}, getFallbacks(field)...)...,
-			)
-		})
-		company := m.Company(func(val, field string) string {
-			return getString(
-				o, append([]string{val}, getFallbacks(field)...)...,
-			)
-		})
-		location := m.Location(func(val, field string) string {
-			return getString(
-				o, append([]string{val}, getFallbacks(field)...)...,
-			)
-		})
-		seniorityStr := m.Seniority(func(val, field string) string {
-			return getString(
-				o, append([]string{val}, getFallbacks(field)...)...,
-			)
-		})
-		jobTypeStr := m.JobType(func(val, field string) string {
-			return getString(
-				o, append([]string{val}, getFallbacks(field)...)...,
-			)
-		})
+		extractor := makeExtractor(objCopy)
+		title := m.Title(extractor)
+		link := m.Link(extractor)
+		company := m.Company(extractor)
+		location := m.Location(extractor)
+		seniorityStr := m.Seniority(extractor)
+		jobTypeStr := m.JobType(extractor)
 
 		tags := getStringSlice(obj, "tags", "technologies", "skills")
 
