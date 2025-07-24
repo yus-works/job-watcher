@@ -15,10 +15,6 @@ import (
 
 func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		// apis := []string{
-		// 	"https://www.arbeitnow.com/api/job-board-api",
-		// }
-		//
 		// feeds := []string{
 		// 	"https://weworkremotely.com/categories/remote-programming-jobs.rss",
 		// 	"http://rss.infostud.com/poslovi/",
