@@ -1,6 +1,8 @@
 package feed
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 type FieldExtractor func(obj map[string]json.RawMessage, keys ...string) string
 
@@ -20,8 +22,7 @@ type Mapper interface {
 // Struct used to tell the parser what the names of the required fields are in
 // each feed
 //
-// Common fields like Title and URL can usually be omitted because the parser
-// can usually pick those up automatically
+// NOTE: Any omitted fields WILL BE IGNORED
 type DefaultMapper struct {
 	TitleField     string
 	CompanyField   string

@@ -15,11 +15,19 @@ type weworkMapper struct {
 	feed.DefaultMapper
 }
 
+// TODO: make decode explicitly fallible ?
 func (m weworkMapper) Title(
 	decode func(val, field string) string,
 ) string {
 	s := decode(m.TitleField, "title")
 	return strings.Split(s, ": ")[1]
+}
+
+func (m weworkMapper) Company(
+	decode func(val, field string) string,
+) string {
+	s := decode(m.TitleField, "title")
+	return strings.Split(s, ": ")[0]
 }
 
 var FEEDS = []feed.Feed{
@@ -28,6 +36,8 @@ var FEEDS = []feed.Feed{
 		Name: "Remotive",
 		URL:  "http://localhost:8000/remotive.rss",
 		Mapper: feed.DefaultMapper{
+			TitleField:    "title",
+			LinkField:     "link",
 			CompanyField:  "company",
 			LocationField: "location",
 			JobTypeField:  "type",
@@ -128,8 +138,11 @@ var FEEDS = []feed.Feed{
 		URL: "http://localhost:8000/remote-programming-jobs.rss",
 		Mapper: weworkMapper{
 			DefaultMapper: feed.DefaultMapper{
-				TitleField:    "category",
-				CompanyField:  "title",
+				// both will be post processed by custom Title()
+				TitleField:   "title",
+				LinkField:    "link",
+				CompanyField: "title",
+
 				LocationField: "region",
 				DateField:     "pubDate",
 			},

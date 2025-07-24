@@ -104,17 +104,26 @@ func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
 			when = *fi.UpdatedParsed
 		}
 
-		m := curr.Mapper.GetConfig()
+		cfg := curr.Mapper.GetConfig()
+		feeditem := FeedItemWrapped{fi}
 
-		title := m.TitleField
-		if fi.Title != "" {
-			title = fi.Title
+		extractor := func(selector, field string) string {
+			if v, err := feeditem.Get(selector); err == nil {
+				return v
+			}
+			log.Printf(
+				"Failed to get %s with (%s) for (%s)",
+				field, selector, curr.Name,
+			)
+			return ""
 		}
 
-		link := m.LinkField
-		if fi.Link != "" {
-			link = fi.Link
-		}
+		title := curr.Mapper.Title(func(_, _ string) string {
+			return extractor(cfg.TitleField, "title")
+		})
+		company := curr.Mapper.Company(func(_, _ string) string {
+			return extractor(cfg.CompanyField, "company")
+		})
 
 		var age time.Duration
 		if !when.IsZero() {
@@ -123,22 +132,24 @@ func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
 
 		item := Item{
 			Source:   curr.Name,
+			Link:     extractor(cfg.LinkField, "link"),
 			Title:    title,
-			Link:     link,
-			Company:  fi.Custom[m.CompanyField],
-			Location: fi.Custom[m.LocationField],
+			Company:  company,
+			Location: extractor(cfg.LocationField, "location"),
 			Date:     when,
 			Age:      age,
 		}
 
-		jobTypeStr := fi.Custom[m.JobTypeField]
-		if jobTypeStr != "" {
-			jobType, err := ParseJobType(jobTypeStr)
-			if err != nil {
-				log.Println("Failed to parse jobTypeStr: ", err)
-			}
+		if cfg.JobTypeField != "" {
+			jobTypeStr := extractor(cfg.JobTypeField, "job type")
+			if jobTypeStr != "" {
+				jobType, err := ParseJobType(jobTypeStr)
+				if err != nil {
+					log.Println("Failed to parse jobTypeStr: ", err)
+				}
 
-			item.JobType = jobType
+				item.JobType = jobType
+			}
 		}
 
 		out = append(out, item)
