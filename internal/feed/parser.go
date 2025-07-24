@@ -16,12 +16,38 @@ func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
 	m := curr.Mapper
 
 	for _, obj := range objs {
-		title := m.Title()(obj)
-		link := m.Link()(obj)
-		company := m.Company()(obj)
-		location := m.Location()(obj)
-		seniorityStr := m.Seniority()(obj)
-		jobTypeStr := m.JobType()(obj)
+		o := obj
+
+		title := m.Title(func(val, field string) string {
+			return getString(
+				o, append([]string{val}, getFallbacks(field)...)...,
+			)
+		})
+		link := m.Link(func(val, field string) string {
+			return getString(
+				o, append([]string{val}, getFallbacks(field)...)...,
+			)
+		})
+		company := m.Company(func(val, field string) string {
+			return getString(
+				o, append([]string{val}, getFallbacks(field)...)...,
+			)
+		})
+		location := m.Location(func(val, field string) string {
+			return getString(
+				o, append([]string{val}, getFallbacks(field)...)...,
+			)
+		})
+		seniorityStr := m.Seniority(func(val, field string) string {
+			return getString(
+				o, append([]string{val}, getFallbacks(field)...)...,
+			)
+		})
+		jobTypeStr := m.JobType(func(val, field string) string {
+			return getString(
+				o, append([]string{val}, getFallbacks(field)...)...,
+			)
+		})
 
 		tags := getStringSlice(obj, "tags", "technologies", "skills")
 

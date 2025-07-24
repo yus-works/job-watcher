@@ -15,12 +15,11 @@ type weworkMapper struct {
 	feed.DefaultMapper
 }
 
-func (m weworkMapper) Title() feed.FieldExtractor {
-	return feed.Custom(
-		m.TitleField, "title", func(s string) string {
-			return strings.Split(s, ": ")[1]
-		},
-	)
+func (m weworkMapper) Title(
+	decode func(val, field string) string,
+) string {
+	s := decode(m.TitleField, "title")
+	return strings.Split(s, ": ")[1]
 }
 
 var FEEDS = []feed.Feed{

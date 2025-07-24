@@ -4,13 +4,15 @@ import "encoding/json"
 
 type FieldExtractor func(obj map[string]json.RawMessage, keys ...string) string
 
+type jObj = map[string]json.RawMessage
+
 type Mapper interface {
-	Title() FieldExtractor
-	Company() FieldExtractor
-	Seniority() FieldExtractor
-	Link() FieldExtractor
-	Location() FieldExtractor
-	JobType() FieldExtractor
+	Title(decode func(val, field string) string) string
+	Company(decode func(val, field string) string) string
+	Seniority(decode func(val, field string) string) string
+	Link(decode func(val, field string) string) string
+	Location(decode func(val, field string) string) string
+	JobType(decode func(val, field string) string) string
 
 	GetConfig() Config
 }
@@ -38,26 +40,38 @@ func (m DefaultMapper) GetConfig() Config {
 	return Config{m}
 }
 
-func (m DefaultMapper) Title() FieldExtractor {
-	return Const(m.TitleField, "title")
+func (m DefaultMapper) Title(
+	decode func(val, field string) string,
+) string {
+	return decode(m.TitleField, "title")
 }
 
-func (m DefaultMapper) Company() FieldExtractor {
-	return Const(m.CompanyField, "company")
+func (m DefaultMapper) Company(
+	decode func(val, field string) string,
+) string {
+	return decode(m.CompanyField, "company")
 }
 
-func (m DefaultMapper) Seniority() FieldExtractor {
-	return Const(m.SeniorityField, "seniority")
+func (m DefaultMapper) Seniority(
+	decode func(val, field string) string,
+) string {
+	return decode(m.SeniorityField, "seniority")
 }
 
-func (m DefaultMapper) Link() FieldExtractor {
-	return Const(m.LinkField, "link")
+func (m DefaultMapper) Link(
+	decode func(val, field string) string,
+) string {
+	return decode(m.LinkField, "link")
 }
 
-func (m DefaultMapper) Location() FieldExtractor {
-	return Const(m.LocationField, "location")
+func (m DefaultMapper) Location(
+	decode func(val, field string) string,
+) string {
+	return decode(m.LocationField, "location")
 }
 
-func (m DefaultMapper) JobType() FieldExtractor {
-	return Const(m.JobTypeField, "kind")
+func (m DefaultMapper) JobType(
+	decode func(val, field string) string,
+) string {
+	return decode(m.JobTypeField, "jobType")
 }
