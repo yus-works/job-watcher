@@ -43,7 +43,6 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 		}
 
 		if jobTypeStr != "" {
-			fmt.Println(jobTypeStr)
 			jobType, err := feed.ParseJobType(jobTypeStr)
 			if err != nil {
 				log.Println("Failed to parse jobTypeStr: ", err)

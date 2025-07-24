@@ -109,4 +109,16 @@ var FEEDS = []feed.Feed{
 			return items, nil
 		},
 	},
+	{
+		Name: "WeWorkRemotely",
+		// TODO: url: "https://weworkremotely.com/categories/remote-programming-jobs.rss"
+		URL: "http://localhost:8000/remote-programming-jobs.rss",
+		Mapping: feed.ItemMap{
+			TitleField:    "category",
+			CompanyField:  "title",
+			LocationField: "region",
+			DateField:     "pubDate",
+		},
+		Parse: parser.ParseRSS,
+	},
 }
