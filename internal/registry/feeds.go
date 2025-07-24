@@ -4,46 +4,55 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/yus-works/job-watcher/internal/feed"
-	"github.com/yus-works/job-watcher/internal/parser"
 )
+
+var _ feed.Mapper = feed.DefaultMapper{}
+
+type weworkMapper struct {
+	feed.DefaultMapper
+}
+
+// TODO: make decode explicitly fallible ?
+func (m weworkMapper) Title(
+	decode func(val, field string) string,
+) string {
+	s := decode(m.TitleField, "title")
+	return strings.Split(s, ": ")[1]
+}
+
+func (m weworkMapper) Company(
+	decode func(val, field string) string,
+) string {
+	s := decode(m.TitleField, "title")
+	return strings.Split(s, ": ")[0]
+}
 
 var FEEDS = []feed.Feed{
 	{
+		// TODO: "https://remotive.com/api/remote-jobs?category=software-dev",
 		Name: "Remotive",
 		URL:  "http://localhost:8000/remotive.rss",
-		Mapping: feed.ItemMap{
+		Mapper: feed.DefaultMapper{
+			TitleField:    "title",
+			LinkField:     "link",
 			CompanyField:  "company",
 			LocationField: "location",
-			KindField:     "type",
+			JobTypeField:  "type",
 		},
-		Parse: parser.ParseRSS,
+		Parse: feed.ParseRSS,
 	},
-
-	/*
-		https://remoteok.com/api
-		type: JSON
-		structure:
-		- list of objects
-		- first object is info
-		relevant fields:
-		- epoch
-		- company
-		- position
-		- tags
-		- location
-		- url
-		info: cant find
-	*/
 	{
 		Name: "RemoteOK",
-		URL:  "http://localhost:8000/remoteok.json",
-		Mapping: feed.ItemMap{
+		// TODO: change to https://remoteok.com/api
+		URL: "http://localhost:8000/remoteok.json",
+		Mapper: feed.DefaultMapper{
 			TitleField:    "position",
 			CompanyField:  "company",
 			LocationField: "location",
-			KindField:     "type",
+			JobTypeField:  "type",
 		},
 		Parse: func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			var rawItems = make([]map[string]json.RawMessage, 0)
@@ -53,12 +62,91 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := parser.ParseJSON(curr, rawItems)
+			items, err := feed.ParseJSON(curr, rawItems)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}
 
 			return items[1:], nil
 		},
+	},
+	{
+		Name: "Jobicy",
+		// TODO: url: https://jobicy.com/api/v2/remote-jobs
+		URL: "http://localhost:8000/jobicy.json",
+		Mapper: feed.DefaultMapper{
+			TitleField:     "jobTitle",
+			CompanyField:   "companyName",
+			LocationField:  "jobGeo",
+			JobTypeField:   "jobType",
+			DateField:      "pubDate",
+			SeniorityField: "jobLevel",
+		},
+		Parse: func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
+			var payload = struct {
+				Jobs []map[string]json.RawMessage `json:"jobs"`
+			}{}
+
+			dec := json.NewDecoder(body)
+			if err := dec.Decode(&payload); err != nil {
+				return nil, fmt.Errorf("Failed to decode body: %w", err)
+			}
+
+			items, err := feed.ParseJSON(curr, payload.Jobs)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to parse: %w", err)
+			}
+
+			return items, nil
+		},
+	},
+	{
+		Name: "Himalayas",
+		// TODO: url: "https://himalayas.app/jobs/api"
+		URL: "http://localhost:8000/himalayas.json",
+		Mapper: feed.DefaultMapper{
+			TitleField:     "title",
+			CompanyField:   "companyName",
+			LocationField:  "locationRestrictions",
+			JobTypeField:   "employmentType",
+			SeniorityField: "seniority",
+
+			// NOTE: Himalayas date is last updated, not first time posted
+			DateField: "pubDate",
+		},
+		Parse: func(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
+			var payload = struct {
+				Jobs []map[string]json.RawMessage `json:"jobs"`
+			}{}
+
+			dec := json.NewDecoder(body)
+			if err := dec.Decode(&payload); err != nil {
+				return nil, fmt.Errorf("Failed to decode body: %w", err)
+			}
+
+			items, err := feed.ParseJSON(curr, payload.Jobs)
+			if err != nil {
+				return nil, fmt.Errorf("Failed to parse: %w", err)
+			}
+
+			return items, nil
+		},
+	},
+	{
+		Name: "WeWorkRemotely",
+		// TODO: url: "https://weworkremotely.com/categories/remote-programming-jobs.rss"
+		URL: "http://localhost:8000/remote-programming-jobs.rss",
+		Mapper: weworkMapper{
+			DefaultMapper: feed.DefaultMapper{
+				// both will be post processed by custom Title()
+				TitleField:   "title",
+				LinkField:    "link",
+				CompanyField: "title",
+
+				LocationField: "region",
+				DateField:     "pubDate",
+			},
+		},
+		Parse: feed.ParseRSS,
 	},
 }

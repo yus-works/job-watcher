@@ -33,6 +33,7 @@ func Stream(
 
 	var wg sync.WaitGroup
 
+	// TODO: why is this loop ran twice? Is stream getting called twice?
 	for _, f := range feeds {
 		feed := f // capture value
 
