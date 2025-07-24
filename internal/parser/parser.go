@@ -43,6 +43,7 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 		}
 
 		if jobTypeStr != "" {
+			fmt.Println(jobTypeStr)
 			jobType, err := feed.ParseJobType(jobTypeStr)
 			if err != nil {
 				log.Println("Failed to parse jobTypeStr: ", err)
@@ -104,22 +105,27 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			age = max(now.Sub(when), 0)
 		}
 
-		jobTypeStr := fi.Custom[curr.Mapping.JobTypeField]
-		jobType, err := feed.ParseJobType(jobTypeStr)
-		if err != nil {
-			log.Println("Failed to parse jobTypeStr: ", err)
-		}
-
-		out = append(out, feed.Item{
+		item := feed.Item{
 			Source:   curr.Name,
 			Title:    title,
 			Link:     link,
 			Company:  fi.Custom[curr.Mapping.CompanyField],
 			Location: fi.Custom[curr.Mapping.LocationField],
-			JobType:  jobType,
 			Date:     when,
 			Age:      age,
-		})
+		}
+
+		jobTypeStr := fi.Custom[curr.Mapping.JobTypeField]
+		if jobTypeStr != "" {
+			jobType, err := feed.ParseJobType(jobTypeStr)
+			if err != nil {
+				log.Println("Failed to parse jobTypeStr: ", err)
+			}
+
+			item.JobType = jobType
+		}
+
+		out = append(out, item)
 	}
 
 	return out, nil
