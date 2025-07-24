@@ -2,7 +2,6 @@ package jobs
 
 import (
 	"github.com/yus-works/job-watcher/internal/feed"
-	"github.com/yus-works/job-watcher/internal/parser"
 )
 
 type DisplayItem struct {
@@ -20,6 +19,6 @@ func NewDisplayItem(i feed.Item) DisplayItem {
 		Seniority: string(i.Seniority),
 		JobType:   string(i.JobType),
 		Date:      i.Date.Local().Format("2006-01-02"),
-		Age:       parser.HumanAgeGreedy(i.Age),
+		Age:       feed.HumanAgeGreedy(i.Age),
 	}
 }

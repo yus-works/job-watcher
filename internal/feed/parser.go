@@ -1,4 +1,4 @@
-package parser
+package feed
 
 import (
 	"encoding/json"
@@ -8,30 +8,30 @@ import (
 	"time"
 
 	"github.com/mmcdole/gofeed"
-	"github.com/yus-works/job-watcher/internal/feed"
 )
 
-func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, error) {
-	out := make([]feed.Item, 0, len(objs))
+func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
+	out := make([]Item, 0, len(objs))
 	now := time.Now()
-	m := curr.Mapping
+	m := curr.Mapper
 
 	for _, obj := range objs {
-		title := getString(obj, append([]string{m.TitleField}, titleFallbacks...)...)
-		link := getString(obj, append([]string{m.LinkField}, linkFallbacks...)...)
-		company := getString(obj, append([]string{m.CompanyField}, companyFallbacks...)...)
-		location := getString(obj, append([]string{m.LocationField}, locationFallbacks...)...)
-		seniorityStr := getString(obj, append([]string{m.SeniorityField}, seniorityFallbacks...)...)
-		jobTypeStr := getString(obj, append([]string{m.JobTypeField}, kindFallbacks...)...)
+		title := m.Title()(obj)
+		link := m.Link()(obj)
+		company := m.Company()(obj)
+		location := m.Location()(obj)
+		seniorityStr := m.Seniority()(obj)
+		jobTypeStr := m.JobType()(obj)
+
 		tags := getStringSlice(obj, "tags", "technologies", "skills")
 
-		when := getEpoch(obj, append([]string{m.DateField}, epochFallbacks...)...)
+		when := getEpoch(obj, append([]string{m.GetConfig().DateField}, epochFallbacks...)...)
 		age := time.Duration(0)
 		if !when.IsZero() {
 			age = now.Sub(when)
 		}
 
-		item := feed.Item{
+		item := Item{
 			Source:   curr.Name,
 			Title:    title,
 			Link:     link,
@@ -43,7 +43,7 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 		}
 
 		if jobTypeStr != "" {
-			jobType, err := feed.ParseJobType(jobTypeStr)
+			jobType, err := ParseJobType(jobTypeStr)
 			if err != nil {
 				log.Println("Failed to parse jobTypeStr: ", err)
 			}
@@ -52,7 +52,7 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 		}
 
 		if seniorityStr != "" {
-			seniority, err := feed.ParseSeniority(seniorityStr)
+			seniority, err := ParseSeniority(seniorityStr)
 			if err != nil {
 				log.Println("Failed to parse seniorityStr: ", err)
 			}
@@ -69,7 +69,7 @@ func ParseJSON(curr feed.Feed, objs []map[string]json.RawMessage) ([]feed.Item, 
 	return out, nil
 }
 
-func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
+func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
 	parser := gofeed.NewParser()
 
 	items, err := parser.Parse(body)
@@ -77,7 +77,7 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 		return nil, fmt.Errorf("ERROR: parsing feed: %w", err)
 	}
 
-	out := make([]feed.Item, 0, len(items.Items))
+	out := make([]Item, 0, len(items.Items))
 
 	now := time.Now()
 
@@ -89,12 +89,14 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			when = *fi.UpdatedParsed
 		}
 
-		title := curr.Mapping.TitleField
+		m := curr.Mapper.GetConfig()
+
+		title := m.TitleField
 		if fi.Title != "" {
 			title = fi.Title
 		}
 
-		link := curr.Mapping.LinkField
+		link := m.LinkField
 		if fi.Link != "" {
 			link = fi.Link
 		}
@@ -104,19 +106,19 @@ func ParseRSS(curr feed.Feed, body io.Reader) ([]feed.Item, error) {
 			age = max(now.Sub(when), 0)
 		}
 
-		item := feed.Item{
+		item := Item{
 			Source:   curr.Name,
 			Title:    title,
 			Link:     link,
-			Company:  fi.Custom[curr.Mapping.CompanyField],
-			Location: fi.Custom[curr.Mapping.LocationField],
+			Company:  fi.Custom[m.CompanyField],
+			Location: fi.Custom[m.LocationField],
 			Date:     when,
 			Age:      age,
 		}
 
-		jobTypeStr := fi.Custom[curr.Mapping.JobTypeField]
+		jobTypeStr := fi.Custom[m.JobTypeField]
 		if jobTypeStr != "" {
-			jobType, err := feed.ParseJobType(jobTypeStr)
+			jobType, err := ParseJobType(jobTypeStr)
 			if err != nil {
 				log.Println("Failed to parse jobTypeStr: ", err)
 			}

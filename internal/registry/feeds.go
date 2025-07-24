@@ -4,28 +4,42 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
 
 	"github.com/yus-works/job-watcher/internal/feed"
-	"github.com/yus-works/job-watcher/internal/parser"
 )
+
+var _ feed.Mapper = feed.DefaultMapper{}
+
+type weworkMapper struct {
+	feed.DefaultMapper
+}
+
+func (m weworkMapper) Title() feed.FieldExtractor {
+	return feed.Custom(
+		m.TitleField, "title", func(s string) string {
+			return strings.Split(s, ": ")[1]
+		},
+	)
+}
 
 var FEEDS = []feed.Feed{
 	{
 		// TODO: "https://remotive.com/api/remote-jobs?category=software-dev",
 		Name: "Remotive",
 		URL:  "http://localhost:8000/remotive.rss",
-		Mapping: feed.ItemMap{
+		Mapper: feed.DefaultMapper{
 			CompanyField:  "company",
 			LocationField: "location",
 			JobTypeField:  "type",
 		},
-		Parse: parser.ParseRSS,
+		Parse: feed.ParseRSS,
 	},
 	{
 		Name: "RemoteOK",
 		// TODO: change to https://remoteok.com/api
 		URL: "http://localhost:8000/remoteok.json",
-		Mapping: feed.ItemMap{
+		Mapper: feed.DefaultMapper{
 			TitleField:    "position",
 			CompanyField:  "company",
 			LocationField: "location",
@@ -39,7 +53,7 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := parser.ParseJSON(curr, rawItems)
+			items, err := feed.ParseJSON(curr, rawItems)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}
@@ -51,7 +65,7 @@ var FEEDS = []feed.Feed{
 		Name: "Jobicy",
 		// TODO: url: https://jobicy.com/api/v2/remote-jobs
 		URL: "http://localhost:8000/jobicy.json",
-		Mapping: feed.ItemMap{
+		Mapper: feed.DefaultMapper{
 			TitleField:     "jobTitle",
 			CompanyField:   "companyName",
 			LocationField:  "jobGeo",
@@ -69,7 +83,7 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := parser.ParseJSON(curr, payload.Jobs)
+			items, err := feed.ParseJSON(curr, payload.Jobs)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}
@@ -81,7 +95,7 @@ var FEEDS = []feed.Feed{
 		Name: "Himalayas",
 		// TODO: url: "https://himalayas.app/jobs/api"
 		URL: "http://localhost:8000/himalayas.json",
-		Mapping: feed.ItemMap{
+		Mapper: feed.DefaultMapper{
 			TitleField:     "title",
 			CompanyField:   "companyName",
 			LocationField:  "locationRestrictions",
@@ -101,7 +115,7 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := parser.ParseJSON(curr, payload.Jobs)
+			items, err := feed.ParseJSON(curr, payload.Jobs)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}
@@ -113,12 +127,14 @@ var FEEDS = []feed.Feed{
 		Name: "WeWorkRemotely",
 		// TODO: url: "https://weworkremotely.com/categories/remote-programming-jobs.rss"
 		URL: "http://localhost:8000/remote-programming-jobs.rss",
-		Mapping: feed.ItemMap{
-			TitleField:    "category",
-			CompanyField:  "title",
-			LocationField: "region",
-			DateField:     "pubDate",
+		Mapper: weworkMapper{
+			DefaultMapper: feed.DefaultMapper{
+				TitleField:    "category",
+				CompanyField:  "title",
+				LocationField: "region",
+				DateField:     "pubDate",
+			},
 		},
-		Parse: parser.ParseRSS,
+		Parse: feed.ParseRSS,
 	},
 }

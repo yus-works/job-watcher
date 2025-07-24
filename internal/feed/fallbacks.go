@@ -1,4 +1,4 @@
-package parser
+package feed
 
 var titleFallbacks = []string{"title", "position", "role"}
 var linkFallbacks = []string{"url", "link", "jobUrl", "applyUrl"}
