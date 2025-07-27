@@ -5,17 +5,33 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
 
+	"github.com/yus-works/job-watcher/internal/logging"
+	"github.com/yus-works/job-watcher/internal/middleware"
 	"github.com/yus-works/job-watcher/internal/router"
 	"github.com/yus-works/job-watcher/internal/store"
 )
 
+var LOG_LEVEL = "DEBUG"
+
+// var LOG_LEVEL = os.Getenv("LOG_LEVEL")
+
 func main() {
-	fs := http.FileServer(http.Dir("./static"))
-	http.Handle("/static/",
-		http.StripPrefix("/static/", fs),
-	)
+
+	logging.Init()
+
+	switch LOG_LEVEL {
+	case "DEBUG":
+		logging.Level.Set(slog.LevelDebug)
+	case "WARN":
+		logging.Level.Set(slog.LevelWarn)
+	case "ERROR":
+		logging.Level.Set(slog.LevelError)
+	default:
+		logging.Level.Set(slog.LevelInfo)
+	}
 
 	store, err := store.NewJobStore("job-store.db")
 	if err != nil {
@@ -31,9 +47,11 @@ func main() {
 	tmpl := template.Must(template.ParseGlob("internal/tmpl/*.html"))
 
 	fmt.Println("Listening on :8080")
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: router.NewRouter(tmpl, store),
-	}
+	app := router.NewRouter(tmpl, store)
+	handler := middleware.Chain(
+		app,
+		middleware.WithRequestLogger,
+	)
+	srv := &http.Server{Addr: ":8080", Handler: handler}
 	log.Fatal(srv.ListenAndServe())
 }

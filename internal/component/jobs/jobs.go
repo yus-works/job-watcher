@@ -3,11 +3,13 @@ package jobs
 import (
 	"fmt"
 	"html/template"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
-	"github.com/yus-works/job-watcher/internal/fetcher"
+	"github.com/yus-works/job-watcher/internal/fetch"
+	"github.com/yus-works/job-watcher/internal/perf"
 	"github.com/yus-works/job-watcher/internal/registry"
 	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
@@ -43,7 +45,14 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 			},
 		}
 
-		itemsCh := fetcher.Stream(ctx, registry.FEEDS, client)
+		itemsCh := fetch.Stream(ctx, registry.FEEDS, client)
+
+		// timers — no time.Now(); they no-op when debug/info not enabled
+		stopTotal, _ := perf.StartTimer(ctx, slog.LevelDebug, "jobs_total")
+		defer stopTotal()
+
+		stopTTFI, _ := perf.StartTimer(ctx, slog.LevelDebug, "ttfi")
+		first := true
 
 		for {
 			select {
@@ -55,7 +64,15 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 					return
 				}
 
+				if first {
+					first = false
+					stopTTFI()
+				}
+
+				stopRender, _ := perf.StartTimer(ctx, slog.LevelDebug, "render")
 				card, err := tmpl.Render(tl, "card", NewDisplayItem(it))
+				stopRender()
+
 				if err != nil {
 					fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", card)
 					flusher.Flush()

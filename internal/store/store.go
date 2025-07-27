@@ -46,6 +46,7 @@ func (s *JobStore) CreateTables(ctx context.Context) error {
 	const schema = `
 CREATE TABLE IF NOT EXISTS jobs (
 	id          TEXT     PRIMARY KEY,
+	hash        INTEGER     NOT NULL UNIQUE,
 	title       TEXT     NOT NULL,
 	url         TEXT     NOT NULL,
 	company     TEXT     NOT NULL,
@@ -60,16 +61,22 @@ CREATE TABLE IF NOT EXISTS jobs (
 func (s *JobStore) Insert(ctx context.Context, j Job) error {
 	const q = `
 INSERT OR IGNORE INTO
-	jobs(id,title,url,company)
-VALUES(?,?,?,?);`
+	jobs(id,hash,title,url,company)
+VALUES(?.?,?,?,?);`
 
-	res, err := s.db.ExecContext(ctx, q, j.ID, j.Title, j.URL, j.Company)
+	hash := HashNormalized64(j.Title + "|" + j.Company)
+
+	res, err := s.db.ExecContext(ctx, q, j.ID, hash, j.Title, j.URL, j.Company)
 	if err != nil {
 		log.Println("ERROR: ", err)
 		return err
 	}
-	if n, _ := res.RowsAffected(); n == 0 {
-		log.Printf("duplicate %s", j.ID)
+
+	n, err2 := res.RowsAffected()
+	if err2 != nil {
+		log.Printf("WARN getting rows affected: %v", err2)
+	} else if n == 0 {
+		log.Printf("duplicate job skipped: %s", j.ID)
 	}
 
 	return nil
