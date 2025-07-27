@@ -3,6 +3,7 @@ package jobs
 import (
 	"fmt"
 	"html/template"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -45,6 +46,9 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 
 		itemsCh := fetcher.Stream(ctx, registry.FEEDS, client)
 
+		start := time.Now()
+		first := true
+
 		for {
 			select {
 			case it, ok := <-itemsCh:
@@ -52,10 +56,19 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 					// all jobs sent, tell the client we're done
 					fmt.Fprintf(w, "event: done\ndata: bye\n\n")
 					flusher.Flush()
+					log.Printf("[/jobs] done in %v", time.Since(start))
 					return
 				}
 
+				if first {
+					first = false
+					log.Printf("[/jobs] TTFI: %v", time.Since(start))
+				}
+
+				t0 := time.Now()
+
 				card, err := tmpl.Render(tl, "card", NewDisplayItem(it))
+				log.Printf("[/jobs] render=%v", time.Since(t0))
 				if err != nil {
 					fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", card)
 					flusher.Flush()
