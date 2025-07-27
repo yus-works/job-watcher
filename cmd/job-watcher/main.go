@@ -9,11 +9,10 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/yus-works/job-watcher/cmd/middleware"
 	"github.com/yus-works/job-watcher/internal/logging"
 	"github.com/yus-works/job-watcher/internal/router"
 	"github.com/yus-works/job-watcher/internal/store"
-
-	"github.com/rs/xid"
 )
 
 var LOG_LEVEL = os.Getenv("LOG_LEVEL")
@@ -47,9 +46,11 @@ func main() {
 	tmpl := template.Must(template.ParseGlob("internal/tmpl/*.html"))
 
 	fmt.Println("Listening on :8080")
-	srv := &http.Server{
-		Addr:    ":8080",
-		Handler: router.NewRouter(tmpl, store),
-	}
+	app := router.NewRouter(tmpl, store)
+	handler := middleware.Chain(
+		app,
+		middleware.WithRequestLogger,
+	)
+	srv := &http.Server{Addr: ":8080", Handler: handler}
 	log.Fatal(srv.ListenAndServe())
 }
