@@ -7,7 +7,6 @@ import (
 	"log"
 	"log/slog"
 	"net/http"
-	"os"
 
 	"github.com/yus-works/job-watcher/internal/logging"
 	"github.com/yus-works/job-watcher/internal/middleware"
@@ -15,7 +14,9 @@ import (
 	"github.com/yus-works/job-watcher/internal/store"
 )
 
-var LOG_LEVEL = os.Getenv("LOG_LEVEL")
+var LOG_LEVEL = "DEBUG"
+
+// var LOG_LEVEL = os.Getenv("LOG_LEVEL")
 
 func main() {
 

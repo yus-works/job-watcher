@@ -82,11 +82,11 @@ func NetTrace(
 	}
 
 	done := func(status int) {
-		attrs := base
 		if status != 0 {
-			attrs = append(attrs, slog.Int("status", status))
+			record("done", slog.Int("status", status))
+		} else {
+			record("done")
 		}
-		record("done", attrs...)
 	}
 
 	return trace, done

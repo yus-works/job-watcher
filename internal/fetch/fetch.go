@@ -37,6 +37,7 @@ type netTimings struct {
 	dns, conn, tls, ttfb time.Duration
 }
 
+// TODO: do some funny dns stuff to fix slow himalayas dns
 func fetch(ctx context.Context, c *http.Client, f feed.Feed) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, f.URL, nil)
 	if err != nil {
