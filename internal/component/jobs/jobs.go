@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/yus-works/job-watcher/internal/fetcher"
+	"github.com/yus-works/job-watcher/internal/fetch"
 	"github.com/yus-works/job-watcher/internal/registry"
 	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
@@ -44,7 +44,7 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 			},
 		}
 
-		itemsCh := fetcher.Stream(ctx, registry.FEEDS, client)
+		itemsCh := fetch.Stream(ctx, registry.FEEDS, client)
 
 		start := time.Now()
 		first := true
