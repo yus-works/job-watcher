@@ -45,7 +45,6 @@ func Stream(
 	feeds []feed.Feed,
 	client *http.Client,
 ) <-chan feed.Item {
-	// TODO: why is this loop ran twice? Is stream getting called twice?
 	out := make(chan feed.Item, 64)
 
 	var wg sync.WaitGroup

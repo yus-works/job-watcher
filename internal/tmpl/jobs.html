@@ -22,20 +22,15 @@
 {{ end }}
 
 {{ define "jobs" }}
-<ul
-	id="job-list"
-	hx-swap="afterbegin"
-	hx-ext="sse"
-	sse-connect="/jobs"
-	sse-swap="foundJobs"
-	sse-close="done"
-></ul>
+<div hx-ext="sse" sse-connect="/jobs" sse-close="done">
+	<ul id="job-list"
+		hx-swap="afterbegin"
+		sse-swap="foundJobs"
+	></ul>
 
-<div
-	id="jobs-failed"
-	hx-ext="sse"
-	sse-connect="/jobs"
-	sse-swap="renderFailed"
-	sse-close="done"
-></div>
+	<div
+		id="jobs-failed"
+		sse-swap="renderFailed"
+	></div>
+</div>
 {{ end }}
