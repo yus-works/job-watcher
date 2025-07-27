@@ -6,6 +6,8 @@ import (
 	"log/slog"
 	"net/http/httptrace"
 	"time"
+
+	"github.com/yus-works/job-watcher/internal/logging"
 )
 
 // StartTimer returns a stop() that logs name + duration at level,
@@ -35,7 +37,9 @@ func StartTimer(
 //	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 //	resp, err := c.Do(req)
 //	if err == nil { done(resp.StatusCode) } else { done(0) }
-func NetTrace(ctx context.Context, log *slog.Logger, level slog.Level, name string, base ...slog.Attr) (*httptrace.ClientTrace, func(int)) {
+func NetTrace(ctx context.Context, level slog.Level, name string, base ...slog.Attr) (*httptrace.ClientTrace, func(int)) {
+	log := logging.From(ctx)
+
 	if log == nil || !log.Enabled(ctx, level) {
 		return nil, func(int) {}
 	}
