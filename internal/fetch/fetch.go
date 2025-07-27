@@ -37,8 +37,6 @@ type netTimings struct {
 	dns, conn, tls, ttfb time.Duration
 }
 
-// TODO: rename pkg to fetch
-
 func fetch(ctx context.Context, c *http.Client, f feed.Feed) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, f.URL, nil)
 	if err != nil {
