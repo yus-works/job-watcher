@@ -10,27 +10,24 @@ import (
 	"github.com/yus-works/job-watcher/internal/logging"
 )
 
-// StartTimer returns a stop() that logs name + duration at level,
-// but if the logger is not enabled at that level, it returns a no-op.
-// Use with: stop := StartTimer(ctx, log, slog.LevelDebug, "parse"); defer stop()
 func StartTimer(
 	ctx context.Context,
 	level slog.Level,
 	name string,
 	attrs ...slog.Attr,
-) func(extra ...slog.Attr) {
+) (func(extra ...slog.Attr), bool) {
 	log := logging.From(ctx)
-
-	if log == nil || !log.Enabled(ctx, level) {
-		return func(...slog.Attr) {}
+	if !log.Enabled(ctx, level) {
+		return func(...slog.Attr) {}, false
 	}
 	start := time.Now()
 	return func(extra ...slog.Attr) {
-		d := time.Since(start)
-		all := append(attrs, slog.Duration("dur", d))
+		all := make([]slog.Attr, 0, len(attrs)+len(extra)+1)
+		all = append(all, attrs...)
+		all = append(all, slog.Duration("dur", time.Since(start)))
 		all = append(all, extra...)
 		log.LogAttrs(ctx, level, name, all...)
-	}
+	}, true
 }
 
 // NetTrace returns an httptrace and a done(status) logger if enabled; otherwise no-ops.

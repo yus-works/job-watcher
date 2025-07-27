@@ -3,12 +3,13 @@ package jobs
 import (
 	"fmt"
 	"html/template"
-	"log"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/yus-works/job-watcher/internal/fetch"
+	"github.com/yus-works/job-watcher/internal/perf"
 	"github.com/yus-works/job-watcher/internal/registry"
 	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
@@ -46,7 +47,11 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 
 		itemsCh := fetch.Stream(ctx, registry.FEEDS, client)
 
-		start := time.Now()
+		// timers — no time.Now(); they no-op when debug/info not enabled
+		stopTotal, _ := perf.StartTimer(ctx, slog.LevelDebug, "jobs_total")
+		defer stopTotal()
+
+		stopTTFI, _ := perf.StartTimer(ctx, slog.LevelDebug, "ttfi")
 		first := true
 
 		for {
@@ -56,19 +61,18 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 					// all jobs sent, tell the client we're done
 					fmt.Fprintf(w, "event: done\ndata: bye\n\n")
 					flusher.Flush()
-					log.Printf("[/jobs] done in %v", time.Since(start))
 					return
 				}
 
 				if first {
 					first = false
-					log.Printf("[/jobs] TTFI: %v", time.Since(start))
+					stopTTFI()
 				}
 
-				t0 := time.Now()
-
+				stopRender, _ := perf.StartTimer(ctx, slog.LevelDebug, "render")
 				card, err := tmpl.Render(tl, "card", NewDisplayItem(it))
-				log.Printf("[/jobs] render=%v", time.Since(t0))
+				stopRender()
+
 				if err != nil {
 					fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", card)
 					flusher.Flush()
