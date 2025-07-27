@@ -14,8 +14,13 @@ import (
 // but if the logger is not enabled at that level, it returns a no-op.
 // Use with: stop := StartTimer(ctx, log, slog.LevelDebug, "parse"); defer stop()
 func StartTimer(
-	ctx context.Context, log *slog.Logger, level slog.Level, name string, attrs ...slog.Attr,
+	ctx context.Context,
+	level slog.Level,
+	name string,
+	attrs ...slog.Attr,
 ) func(extra ...slog.Attr) {
+	log := logging.From(ctx)
+
 	if log == nil || !log.Enabled(ctx, level) {
 		return func(...slog.Attr) {}
 	}
