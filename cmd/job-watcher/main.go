@@ -5,17 +5,42 @@ import (
 	"fmt"
 	"html/template"
 	"log"
+	"log/slog"
 	"net/http"
+	"os"
 
+	"github.com/yus-works/job-watcher/internal/logging"
 	"github.com/yus-works/job-watcher/internal/router"
 	"github.com/yus-works/job-watcher/internal/store"
+
+	"github.com/rs/xid"
 )
 
+func withRequestLogger(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		reqID := xid.New().String()
+		l := slog.Default().With("req_id", reqID, "path", r.URL.Path)
+		ctx := logging.Into(r.Context(), l)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
+
+var LOG_LEVEL = os.Getenv("LOG_LEVEL")
+
 func main() {
-	fs := http.FileServer(http.Dir("./static"))
-	http.Handle("/static/",
-		http.StripPrefix("/static/", fs),
-	)
+
+	logging.Init()
+
+	switch LOG_LEVEL {
+	case "DEBUG":
+		logging.Level.Set(slog.LevelDebug)
+	case "WARN":
+		logging.Level.Set(slog.LevelWarn)
+	case "ERROR":
+		logging.Level.Set(slog.LevelError)
+	default:
+		logging.Level.Set(slog.LevelInfo)
+	}
 
 	store, err := store.NewJobStore("job-store.db")
 	if err != nil {
