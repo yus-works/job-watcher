@@ -9,8 +9,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/yus-works/job-watcher/cmd/middleware"
 	"github.com/yus-works/job-watcher/internal/logging"
+	"github.com/yus-works/job-watcher/internal/middleware"
 	"github.com/yus-works/job-watcher/internal/router"
 	"github.com/yus-works/job-watcher/internal/store"
 )
