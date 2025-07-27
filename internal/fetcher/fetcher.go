@@ -2,6 +2,7 @@ package fetcher
 
 import (
 	"context"
+	"io"
 	"log"
 	"net/http"
 	"sync"
@@ -9,7 +10,23 @@ import (
 	"github.com/yus-works/job-watcher/internal/feed"
 )
 
-func fetch(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.Item, error) {
+func getItems(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.Item, error) {
+	body, err := fetch(ctx, c, feed)
+	if err != nil {
+		log.Printf("Failed to fetch items (%s)", feed.Name)
+	}
+
+	defer body.Close()
+
+	items, err := feed.Parse(feed, body)
+	if err != nil {
+		log.Printf("Failed to parse items (%s)", feed.Name)
+	}
+
+	return items, nil
+}
+
+func fetch(ctx context.Context, c *http.Client, feed feed.Feed) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, feed.URL, nil)
 	if err != nil {
 		return nil, err
@@ -19,9 +36,8 @@ func fetch(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.Item, er
 	if err != nil {
 		return nil, err
 	}
-	defer resp.Body.Close()
 
-	return feed.Parse(feed, resp.Body)
+	return resp.Body, nil
 }
 
 func Stream(
@@ -29,11 +45,12 @@ func Stream(
 	feeds []feed.Feed,
 	client *http.Client,
 ) <-chan feed.Item {
+	// TODO: why is this loop ran twice? Is stream getting called twice?
 	out := make(chan feed.Item, 64)
 
 	var wg sync.WaitGroup
 
-	// TODO: why is this loop ran twice? Is stream getting called twice?
+	// for each feed, spawn a getter routine
 	for _, f := range feeds {
 		feed := f // capture value
 
@@ -42,8 +59,7 @@ func Stream(
 		go func() {
 			defer wg.Done()
 
-			// TODO: move parsing to separate func call
-			items, err := fetch(ctx, client, feed)
+			items, err := getItems(ctx, client, feed)
 			if err != nil {
 				log.Printf("fetch %s: %v", feed.URL, err)
 				return
