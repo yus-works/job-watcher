@@ -37,13 +37,17 @@ func StartTimer(
 //	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 //	resp, err := c.Do(req)
 //	if err == nil { done(resp.StatusCode) } else { done(0) }
-func NetTrace(ctx context.Context, level slog.Level, name string, base ...slog.Attr) (*httptrace.ClientTrace, func(int)) {
+func NetTrace(
+	ctx context.Context, level slog.Level, name string, base ...slog.Attr,
+) (*httptrace.ClientTrace, func(int)) {
 	log := logging.From(ctx)
 
 	if log == nil || !log.Enabled(ctx, level) {
 		return nil, func(int) {}
 	}
+
 	start := time.Now()
+
 	var dnsStart, connStart, tlsStart time.Time
 	record := func(event string, extra ...slog.Attr) {
 		log.LogAttrs(ctx, level, name,
@@ -52,6 +56,7 @@ func NetTrace(ctx context.Context, level slog.Level, name string, base ...slog.A
 				slog.Duration("since_start", time.Since(start)),
 			}, base...), extra...)...)
 	}
+
 	trace := &httptrace.ClientTrace{
 		DNSStart: func(httptrace.DNSStartInfo) { dnsStart = time.Now() },
 		DNSDone: func(httptrace.DNSDoneInfo) {
@@ -73,6 +78,7 @@ func NetTrace(ctx context.Context, level slog.Level, name string, base ...slog.A
 		},
 		GotFirstResponseByte: func() { record("ttfb") },
 	}
+
 	done := func(status int) {
 		attrs := base
 		if status != 0 {
@@ -80,5 +86,6 @@ func NetTrace(ctx context.Context, level slog.Level, name string, base ...slog.A
 		}
 		record("done", attrs...)
 	}
+
 	return trace, done
 }

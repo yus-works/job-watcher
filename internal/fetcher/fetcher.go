@@ -1,16 +1,19 @@
 package fetcher
 
 import (
+	"bytes"
 	"context"
-	"crypto/tls"
+	"fmt"
 	"io"
 	"log"
+	"log/slog"
 	"net/http"
 	"net/http/httptrace"
 	"sync"
 	"time"
 
 	"github.com/yus-works/job-watcher/internal/feed"
+	"github.com/yus-works/job-watcher/internal/perf"
 )
 
 func getItems(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.Item, error) {
@@ -34,32 +37,40 @@ type netTimings struct {
 	dns, conn, tls, ttfb time.Duration
 }
 
+// TODO: rename pkg to fetch
+
 func fetch(ctx context.Context, c *http.Client, f feed.Feed) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, f.URL, nil)
 	if err != nil {
 		return nil, err
 	}
+	req.Header.Set("User-Agent", "JobWatcher/0.1 (+https://example.com)")
 
-	nt := &netTimings{startedAt: time.Now()}
-	trace := &httptrace.ClientTrace{
-		DNSStart:             func(httptrace.DNSStartInfo) { nt.startedAt = time.Now() },
-		DNSDone:              func(httptrace.DNSDoneInfo) { nt.dns = time.Since(nt.startedAt) },
-		ConnectStart:         func(_, _ string) { nt.startedAt = time.Now() },
-		ConnectDone:          func(_, _ string, _ error) { nt.conn = time.Since(nt.startedAt) },
-		TLSHandshakeStart:    func() { nt.startedAt = time.Now() },
-		TLSHandshakeDone:     func(tls.ConnectionState, error) { nt.tls = time.Since(nt.startedAt) },
-		GotFirstResponseByte: func() { nt.ttfb = time.Since(nt.startedAt); nt.ttfbAt = time.Now() },
+	// attach httptrace only if debug enabled
+	trace, done := perf.NetTrace(
+		ctx,
+		slog.LevelDebug,
+		"fetch",
+		slog.String("feed", f.Name),
+		slog.String("url", f.URL),
+	)
+	if trace != nil {
+		req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 	}
-	req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
 
 	resp, err := c.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode != http.StatusOK {
+		snippet, _ := io.ReadAll(io.LimitReader(resp.Body, 8<<10))
+		resp.Body.Close()
 
-	log.Printf("[%s] dns=%v conn=%v tls=%v ttfb=%v status=%d",
-		f.Name, nt.dns, nt.conn, nt.tls, nt.ttfb, resp.StatusCode)
+		done(resp.StatusCode) // no-op if perf logging is off
+		return nil, fmt.Errorf("%s: status %d: %q", f.Name, resp.StatusCode, bytes.TrimSpace(snippet))
+	}
 
+	done(resp.StatusCode)
 	return resp.Body, nil
 }
 
