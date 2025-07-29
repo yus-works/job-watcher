@@ -5,6 +5,7 @@ import (
 	"time"
 )
 
+// TODO: wait is Item and Job totally redundant? could I just use one of them?
 type Item struct {
 	Source   string
 	Title    string
@@ -20,6 +21,9 @@ type Item struct {
 	// TODO: some kind of tag enum/normalization
 	Tags []string
 }
+
+func Identifier()
+j.Title + "|" + j.Company
 
 type Feed struct {
 	Name   string
