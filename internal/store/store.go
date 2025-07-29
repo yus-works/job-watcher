@@ -3,20 +3,35 @@ package store
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"log"
 	"os"
+	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/yus-works/job-watcher/internal/feed"
 )
 
 type Job struct {
-	ID         string
-	Title      string
-	URL        string
-	Company    string
+	ID       string
+	Hash     int64
+	Source   string
+	Title    string
+	Link     string
+	Company  string
+	Location string
+
+	Seniority string
+	JobType   string
+	Date      time.Time
+
 	InsertedAt time.Time
 	Score      float64
+}
+
+func FromFeedItem(fi feed.Item) Job {
+	return Job{}
 }
 
 type JobStore struct {
@@ -46,15 +61,35 @@ func (s *JobStore) CreateTables(ctx context.Context) error {
 	const schema = `
 CREATE TABLE IF NOT EXISTS jobs (
 	id          TEXT     PRIMARY KEY,
-	hash        INTEGER     NOT NULL UNIQUE,
+	hash        INTEGER  NOT NULL UNIQUE,
+	source      TEXT     NOT NULL,
 	title       TEXT     NOT NULL,
-	url         TEXT     NOT NULL,
+	link        TEXT     NOT NULL,
 	company     TEXT     NOT NULL,
+	location    TEXT     NOT NULL,
+
+	seniority   TEXT     NOT NULL CHECK (seniority IN ('%s')),
+	jobtype     TEXT     NOT NULL CHECK (jobtype IN ('%s')),
+	date        DATETIME NOT NULL,
+	
 	inserted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
 	score       REAL     DEFAULT 1.0
-);`
+) STRICT;`
 
-	_, err := s.db.ExecContext(ctx, schema)
+	toCheckList := func(l []string) string {
+		for i, s := range l {
+			l[i] = fmt.Sprintf("'%s'", s)
+		}
+
+		return strings.Join(l, ",")
+	}
+
+	query := fmt.Sprintf(schema,
+		toCheckList(feed.SENIORITIES),
+		toCheckList(feed.JOB_TYPES),
+	)
+
+	_, err := s.db.ExecContext(ctx, query)
 	return err
 }
 
