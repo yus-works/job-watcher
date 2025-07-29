@@ -9,6 +9,7 @@ import (
 
 	"github.com/yus-works/job-watcher/internal/component/home"
 	"github.com/yus-works/job-watcher/internal/component/jobs"
+	"github.com/yus-works/job-watcher/internal/component/refresh"
 	"github.com/yus-works/job-watcher/internal/store"
 )
 
@@ -57,4 +58,5 @@ func registerHandlers(
 ) {
 	m.HandleFunc("/", home.Register(t, s))
 	m.HandleFunc("/jobs", jobs.Register(t, c))
+	m.HandleFunc("/refresh", refresh.Register(s, c))
 }

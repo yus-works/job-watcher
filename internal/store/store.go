@@ -129,7 +129,7 @@ VALUES
 
 	if err != nil {
 		log.Println("ERROR: ", err)
-		return err
+		return false, err
 	}
 
 	inserted, err2 := res.RowsAffected()
@@ -139,7 +139,7 @@ VALUES
 		logging.From(ctx).Debug("duplicate job skipped: %s", Identifier(j))
 	}
 
-	return !inserted, nil
+	return inserted == 1, nil
 }
 
 func (s *JobStore) GetJobs(ctx context.Context, filter string) ([]Job, error) {
