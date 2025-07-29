@@ -31,10 +31,14 @@ func (m weworkMapper) Company(
 }
 
 var FEEDS = []feed.Feed{
+	// 	"https://weworkremotely.com/categories/remote-programming-jobs.rss",
+	// 	"http://rss.infostud.com/poslovi/",
+	// 	"https://profession.hu/allasok?rss",
+	// 	"https://mernokallasok.hu/rss_friss.xml",
 	{
 		// TODO: "https://remotive.com/api/remote-jobs?category=software-dev",
 		Name: "Remotive",
-		URL:  "https://remotive.com/api/remote-jobs?category=software-dev",
+		URL:  "http://localhost:8000/remotive.rss",
 		Mapper: feed.DefaultMapper{
 			TitleField:    "title",
 			LinkField:     "link",
@@ -47,7 +51,7 @@ var FEEDS = []feed.Feed{
 	{
 		Name: "RemoteOK",
 		// TODO: change to https://remoteok.com/api
-		URL: "https://remoteok.com/api",
+		URL: "http://localhost:8000/remoteok.json",
 		Mapper: feed.DefaultMapper{
 			TitleField:    "position",
 			CompanyField:  "company",
@@ -73,7 +77,7 @@ var FEEDS = []feed.Feed{
 	{
 		Name: "Jobicy",
 		// TODO: url: https://jobicy.com/api/v2/remote-jobs
-		URL: "https://jobicy.com/api/v2/remote-jobs",
+		URL: "http://localhost:8000/jobicy.json",
 		Mapper: feed.DefaultMapper{
 			TitleField:     "jobTitle",
 			CompanyField:   "companyName",
@@ -103,7 +107,7 @@ var FEEDS = []feed.Feed{
 	{
 		Name: "Himalayas",
 		// TODO: url: "https://himalayas.app/jobs/api"
-		URL: "https://himalayas.app/jobs/api",
+		URL: "http://localhost:8000/himalayas.json",
 		Mapper: feed.DefaultMapper{
 			TitleField:     "title",
 			CompanyField:   "companyName",
@@ -135,7 +139,7 @@ var FEEDS = []feed.Feed{
 	{
 		Name: "WeWorkRemotely",
 		// TODO: url: "https://weworkremotely.com/categories/remote-programming-jobs.rss"
-		URL: "https://weworkremotely.com/categories/remote-programming-jobs.rss",
+		URL: "http://localhost:8000/remote-programming-jobs.rss",
 		Mapper: weworkMapper{
 			DefaultMapper: feed.DefaultMapper{
 				// both will be post processed by custom Title()
