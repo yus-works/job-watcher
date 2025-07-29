@@ -11,6 +11,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/yus-works/job-watcher/internal/feed"
+	"github.com/yus-works/job-watcher/internal/logging"
 )
 
 type Job struct {
@@ -28,6 +29,10 @@ type Job struct {
 
 	InsertedAt time.Time
 	Score      float64
+}
+
+func Identifier(j Job) string {
+	return j.Title + "|" + j.Company
 }
 
 func FromFeedItem(fi feed.Item) Job {
@@ -93,7 +98,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 	return err
 }
 
-func (s *JobStore) Insert(ctx context.Context, j Job) error {
+func (s *JobStore) Insert(ctx context.Context, j Job) (bool, error) {
 	// insertedAt skipped bcs db default
 	const q = `
 INSERT OR IGNORE INTO jobs
@@ -101,7 +106,7 @@ INSERT OR IGNORE INTO jobs
 VALUES
 	(?,  ?,    ?,      ?,     ?,    ?,       ?,        ?,         ?,       ?,    ?);`
 
-	hash := HashNormalized64(j.Title + "|" + j.Company)
+	hash := HashNormalized64(Identifier(j))
 
 	res, err := s.db.ExecContext(
 		ctx, q,
@@ -127,14 +132,14 @@ VALUES
 		return err
 	}
 
-	n, err2 := res.RowsAffected()
+	inserted, err2 := res.RowsAffected()
 	if err2 != nil {
-		log.Printf("WARN getting rows affected: %v", err2)
-	} else if n == 0 {
-		log.Printf("duplicate job skipped: %s", j.ID)
+		logging.From(ctx).Warn("Getting rows affected: %v", err2)
+	} else if inserted == 0 {
+		logging.From(ctx).Debug("duplicate job skipped: %s", Identifier(j))
 	}
 
-	return nil
+	return !inserted, nil
 }
 
 func (s *JobStore) GetJobs(ctx context.Context, filter string) ([]Job, error) {
