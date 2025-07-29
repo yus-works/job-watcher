@@ -34,10 +34,10 @@ func NewRouter(t *template.Template, s *store.JobStore) *http.ServeMux {
 		IdleConnTimeout:    90 * time.Second,
 		DisableCompression: false,
 	}
-	client := &http.Client{Transport: tr, Timeout: 10 * time.Second}
+	c := &http.Client{Transport: tr, Timeout: 10 * time.Second}
 
 	registerFS(mux)
-	registerHandlers(mux, t, s)
+	registerHandlers(mux, t, s, c)
 
 	return mux
 }
@@ -53,7 +53,8 @@ func registerHandlers(
 	m *http.ServeMux,
 	t *template.Template,
 	s *store.JobStore,
+	c *http.Client,
 ) {
 	m.HandleFunc("/", home.Register(t, s))
-	m.HandleFunc("/jobs", jobs.Register(t, s))
+	m.HandleFunc("/jobs", jobs.Register(t, c))
 }
