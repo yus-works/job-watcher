@@ -116,9 +116,8 @@ func getFallbacks(field string) []string {
 		return companyFallbacks
 	case "location":
 		return locationFallbacks
-	// TODO: rename kind
-	case "kind":
-		return kindFallbacks
+	case "jobType":
+		return jobTypeFallbacks
 	case "seniority":
 		return seniorityFallbacks
 	default:

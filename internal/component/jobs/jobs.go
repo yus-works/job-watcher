@@ -6,16 +6,17 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
-	"time"
 
 	"github.com/yus-works/job-watcher/internal/fetch"
 	"github.com/yus-works/job-watcher/internal/perf"
 	"github.com/yus-works/job-watcher/internal/registry"
-	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
 )
 
-func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
+func Register(
+	t *template.Template,
+	c *http.Client,
+) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// feeds := []string{
 		// 	"https://weworkremotely.com/categories/remote-programming-jobs.rss",
@@ -36,16 +37,7 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 
 		ctx := req.Context()
 
-		client := &http.Client{
-			Timeout: 10 * time.Second,
-			Transport: &http.Transport{
-				MaxIdleConns:       100,
-				IdleConnTimeout:    90 * time.Second,
-				DisableCompression: false,
-			},
-		}
-
-		itemsCh := fetch.Stream(ctx, registry.FEEDS, client)
+		itemsCh := fetch.Stream(ctx, registry.FEEDS, c)
 
 		// timers — no time.Now(); they no-op when debug/info not enabled
 		stopTotal, _ := perf.StartTimer(ctx, slog.LevelDebug, "jobs_total")
@@ -70,7 +62,7 @@ func Register(tl *template.Template, st *store.JobStore) http.HandlerFunc {
 				}
 
 				stopRender, _ := perf.StartTimer(ctx, slog.LevelDebug, "render")
-				card, err := tmpl.Render(tl, "card", NewDisplayItem(it))
+				card, err := tmpl.Render(t, "card", NewDisplayItem(it))
 				stopRender()
 
 				if err != nil {
