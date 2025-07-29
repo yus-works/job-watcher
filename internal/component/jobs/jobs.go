@@ -10,14 +10,12 @@ import (
 	"github.com/yus-works/job-watcher/internal/fetch"
 	"github.com/yus-works/job-watcher/internal/perf"
 	"github.com/yus-works/job-watcher/internal/registry"
-	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
 )
 
 func Register(
-	tl *template.Template,
-	st *store.JobStore,
-	cl *http.Client,
+	t *template.Template,
+	c *http.Client,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// feeds := []string{
@@ -39,7 +37,7 @@ func Register(
 
 		ctx := req.Context()
 
-		itemsCh := fetch.Stream(ctx, registry.FEEDS, cl)
+		itemsCh := fetch.Stream(ctx, registry.FEEDS, c)
 
 		// timers — no time.Now(); they no-op when debug/info not enabled
 		stopTotal, _ := perf.StartTimer(ctx, slog.LevelDebug, "jobs_total")
@@ -64,7 +62,7 @@ func Register(
 				}
 
 				stopRender, _ := perf.StartTimer(ctx, slog.LevelDebug, "render")
-				card, err := tmpl.Render(tl, "card", NewDisplayItem(it))
+				card, err := tmpl.Render(t, "card", NewDisplayItem(it))
 				stopRender()
 
 				if err != nil {
