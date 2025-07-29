@@ -22,6 +22,8 @@ const (
 	Internship     JobType = "internship"
 )
 
+var JOB_TYPES = []string{"fulltime", "parttime", "contract", "internship"}
+
 // ParseJobType normalizes s (drops non‑letters) and returns the matching JobType.
 func ParseJobType(s string) (JobType, error) {
 	jobType := normalize(s)
@@ -48,8 +50,9 @@ const (
 	Junior           Seniority = "junior"
 	Medior           Seniority = "medior"
 	Senior           Seniority = "senior"
-	Director         Seniority = "senior"
 )
+
+var SENIORITIES = []string{"intern", "junior", "medior", "senior"}
 
 // ParseSeniority normalizes s (drops non‑letters) and returns the matching Seniority.
 func ParseSeniority(s string) (Seniority, error) {
@@ -64,8 +67,6 @@ func ParseSeniority(s string) (Seniority, error) {
 		return Medior, nil
 	case "senior":
 		return Senior, nil
-	case "director":
-		return Director, nil
 	case "any":
 		return UnknownSeniority, nil
 	default:
