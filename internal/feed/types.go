@@ -22,9 +22,6 @@ type Item struct {
 	Tags []string
 }
 
-func Identifier()
-j.Title + "|" + j.Company
-
 type Feed struct {
 	Name   string
 	URL    string
