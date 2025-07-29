@@ -22,8 +22,8 @@ type Job struct {
 	Company  string
 	Location string
 
-	Seniority string
-	JobType   string
+	Seniority feed.Seniority
+	JobType   feed.JobType
 	Date      time.Time
 
 	InsertedAt time.Time
@@ -68,11 +68,11 @@ CREATE TABLE IF NOT EXISTS jobs (
 	company     TEXT     NOT NULL,
 	location    TEXT     NOT NULL,
 
-	seniority   TEXT     NOT NULL CHECK (seniority IN ('%s')),
-	jobtype     TEXT     NOT NULL CHECK (jobtype IN ('%s')),
-	date        DATETIME NOT NULL,
+	seniority   TEXT     NOT NULL CHECK (seniority IN (%s)),
+	jobtype     TEXT     NOT NULL CHECK (jobtype IN (%s)),
+	date        TEXT     NOT NULL,
 	
-	inserted_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+	inserted_at TEXT     DEFAULT CURRENT_TIMESTAMP,
 	score       REAL     DEFAULT 1.0
 ) STRICT;`
 
@@ -94,14 +94,34 @@ CREATE TABLE IF NOT EXISTS jobs (
 }
 
 func (s *JobStore) Insert(ctx context.Context, j Job) error {
+	// insertedAt skipped bcs db default
 	const q = `
-INSERT OR IGNORE INTO
-	jobs(id,hash,title,url,company)
-VALUES(?.?,?,?,?);`
+INSERT OR IGNORE INTO jobs
+	(id, hash, source, title, link, company, location, seniority, jobType, date, score)
+VALUES
+	(?,  ?,    ?,      ?,     ?,    ?,       ?,        ?,         ?,       ?,    ?);`
 
 	hash := HashNormalized64(j.Title + "|" + j.Company)
 
-	res, err := s.db.ExecContext(ctx, q, j.ID, hash, j.Title, j.URL, j.Company)
+	res, err := s.db.ExecContext(
+		ctx, q,
+
+		j.ID,
+		hash,
+		j.Source,
+		j.Title,
+		j.Link,
+		j.Company,
+		j.Location,
+
+		string(j.Seniority),
+		string(j.JobType),
+		j.Date.Format(time.RFC3339),
+
+		// insertedAt skipped bcs db default
+		j.Score,
+	)
+
 	if err != nil {
 		log.Println("ERROR: ", err)
 		return err
@@ -120,7 +140,7 @@ VALUES(?.?,?,?,?);`
 func (s *JobStore) GetJobs(ctx context.Context, filter string) ([]Job, error) {
 	const q = `
 SELECT
-	id, title, url, inserted_at, score, company
+	id, hash, source, title, link, company, location, seniority, jobType, date, score
 FROM
 	jobs
 WHERE
@@ -134,12 +154,35 @@ WHERE
 
 	var out []Job
 	for rows.Next() {
+		var (
+			seniorityStr string
+			jobTypeStr   string
+		)
 		var j Job
 		if err := rows.Scan(
-			&j.ID, &j.Title, &j.URL, &j.InsertedAt, &j.Score, &j.Company,
+			&j.ID,
+			&j.Hash,
+			&j.Source,
+			&j.Title,
+			&j.Link,
+			&j.Company,
+			&j.Location,
+
+			&j.Date,
+
+			&j.InsertedAt,
+			&j.Score,
 		); err != nil {
 			return nil, err
 		}
+
+		if j.Seniority, err = feed.ParseSeniority(seniorityStr); err != nil {
+			return nil, err
+		}
+		if j.JobType, err = feed.ParseJobType(jobTypeStr); err != nil {
+			return nil, err
+		}
+
 		out = append(out, j)
 	}
 	return out, rows.Err()
