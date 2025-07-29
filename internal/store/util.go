@@ -2,6 +2,7 @@ package store
 
 import (
 	"hash/fnv"
+	"math"
 	"strings"
 	"unicode"
 
@@ -23,8 +24,8 @@ func Normalize(s string) string {
 	return strings.Join(strings.Fields(string(buf)), " ")
 }
 
-func HashNormalized64(s string) uint64 {
+func HashNormalized64(s string) int64 {
 	h := fnv.New64a()
 	h.Write([]byte(Normalize(s)))
-	return h.Sum64()
+	return int64(h.Sum64() & math.MaxInt64) // zero out MSB
 }
