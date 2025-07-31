@@ -41,10 +41,10 @@ func (s *JobStore) Close() error {
 	return s.db.Close()
 }
 
-func (s *JobStore) CreateTables(ctx context.Context) error {
+func (s *JobStore) createJobsTable(ctx context.Context) error {
 	const schema = `
 CREATE TABLE IF NOT EXISTS jobs (
-	id          TEXT     PRIMARY KEY,
+	id          TEXT     PRIMARY KEY AUTOINCREMENT,
 	hash        INTEGER  NOT NULL UNIQUE,
 	source      TEXT     NOT NULL,
 	title       TEXT     NOT NULL,
@@ -75,6 +75,15 @@ CREATE TABLE IF NOT EXISTS jobs (
 
 	_, err := s.db.ExecContext(ctx, query)
 	return err
+}
+
+func (s *JobStore) CreateTables(ctx context.Context) error {
+	var err error
+	if err = s.createJobsTable(ctx); err != nil {
+		return fmt.Errorf("Failed to create Jobs table: %w", err)
+	}
+
+	return nil
 }
 
 func (s *JobStore) Insert(ctx context.Context, j feed.JobItem) (bool, error) {
