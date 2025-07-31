@@ -14,29 +14,8 @@ import (
 	"github.com/yus-works/job-watcher/internal/logging"
 )
 
-type Job struct {
-	ID       string
-	Hash     int64
-	Source   string
-	Title    string
-	Link     string
-	Company  string
-	Location string
-
-	Seniority feed.Seniority
-	JobType   feed.JobType
-	Date      time.Time
-
-	InsertedAt time.Time
-	Score      float64
-}
-
-func Identifier(j Job) string {
+func Identifier(j feed.JobItem) string {
 	return j.Title + "|" + j.Company
-}
-
-func FromFeedItem(fi feed.JobItem) Job {
-	return Job{}
 }
 
 type JobStore struct {
@@ -98,7 +77,7 @@ CREATE TABLE IF NOT EXISTS jobs (
 	return err
 }
 
-func (s *JobStore) Insert(ctx context.Context, j Job) (bool, error) {
+func (s *JobStore) Insert(ctx context.Context, j feed.JobItem) (bool, error) {
 	// insertedAt skipped bcs db default
 	const q = `
 INSERT OR IGNORE INTO jobs
@@ -146,7 +125,7 @@ VALUES
 	return inserted == 1, nil
 }
 
-func (s *JobStore) GetJobs(ctx context.Context, filter string) ([]Job, error) {
+func (s *JobStore) GetJobs(ctx context.Context, filter string) ([]feed.JobItem, error) {
 	const q = `
 SELECT
 	id, hash, source, title, link, company, location, seniority, jobType, date, score
@@ -161,13 +140,13 @@ WHERE
 	}
 	defer rows.Close()
 
-	var out []Job
+	var out []feed.JobItem
 	for rows.Next() {
 		var (
 			seniorityStr string
 			jobTypeStr   string
 		)
-		var j Job
+		var j feed.JobItem
 		if err := rows.Scan(
 			&j.ID,
 			&j.Hash,

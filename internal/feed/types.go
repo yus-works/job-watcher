@@ -6,6 +6,8 @@ import (
 )
 
 type JobItem struct {
+	ID       string
+	Hash     int64
 	Source   string
 	Title    string
 	Link     string
@@ -15,7 +17,10 @@ type JobItem struct {
 	Seniority Seniority
 	JobType   JobType
 	Date      time.Time
-	Age       time.Duration
+
+	Age        time.Duration
+	InsertedAt time.Time
+	Score      float64
 
 	// TODO: some kind of tag enum/normalization
 	Tags []string

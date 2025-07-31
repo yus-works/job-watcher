@@ -29,7 +29,7 @@ func Register(
 		skippedCount := 0
 
 		for it := range itemsCh {
-			inserted, err := s.Insert(ctx, store.FromFeedItem(it))
+			inserted, err := s.Insert(ctx, it)
 			if err != nil {
 				msg := fmt.Sprintf("insert failed: %v", err)
 
