@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
@@ -15,7 +14,7 @@ import (
 )
 
 func Identifier(j feed.JobItem) string {
-	return j.Title + "|" + j.Company
+	return normalize(j.Title) + "|" + normalize(j.Company)
 }
 
 type JobStore struct {
@@ -44,19 +43,26 @@ func (s *JobStore) Close() error {
 func (s *JobStore) createJobsTable(ctx context.Context) error {
 	const schema = `
 CREATE TABLE IF NOT EXISTS jobs (
-	id          INTEGER  PRIMARY KEY AUTOINCREMENT,
-	hash        INTEGER  NOT NULL UNIQUE,
+	hash        INTEGER  PRIMARY KEY,
 	source      TEXT     NOT NULL,
 	title       TEXT     NOT NULL,
 	link        TEXT     NOT NULL,
 	company     TEXT     NOT NULL,
 	location    TEXT     NOT NULL,
 
-	seniority   TEXT     NOT NULL CHECK (seniority IN (%s)),
-	jobtype     TEXT     NOT NULL CHECK (jobtype IN (%s)),
+	seniority   TEXT     CHECK (
+		seniority IS NULL
+		OR seniority IN (%s)
+	),
+	jobtype     TEXT     CHECK (
+		jobtype IS NULL
+		OR jobtype IN (%s)
+	),
+
 	date        TEXT     NOT NULL,
 	
 	inserted_at TEXT     DEFAULT CURRENT_TIMESTAMP,
+	updated_at  TEXT     DEFAULT CURRENT_TIMESTAMP,
 	score       REAL     DEFAULT 1.0
 ) STRICT;`
 
@@ -79,21 +85,18 @@ CREATE TABLE IF NOT EXISTS jobs (
 
 func (s *JobStore) createTagsTables(ctx context.Context) error {
 	const schema = `
-CREATE TABLE tags (
+CREATE TABLE IF NOT EXISTS tags (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL UNIQUE,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- join table
-CREATE TABLE job_tags (
-  job_id INTEGER NOT NULL,
-  tag_id INTEGER NOT NULL,
-  PRIMARY KEY (job_id, tag_id),
-  FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
-  FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+CREATE TABLE IF NOT EXISTS job_tags (
+    job_hash INTEGER NOT NULL REFERENCES jobs(hash) ON DELETE CASCADE,
+    tag_id   INTEGER NOT NULL REFERENCES tags(id)   ON DELETE CASCADE,
+    PRIMARY KEY (job_hash, tag_id)
 );`
-
 	_, err := s.db.ExecContext(ctx, schema)
 	return err
 }
@@ -112,19 +115,42 @@ func (s *JobStore) CreateTables(ctx context.Context) error {
 }
 
 func (s *JobStore) Insert(ctx context.Context, j feed.JobItem) (bool, error) {
-	// insertedAt skipped bcs db default
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return false, err
+	}
+	rollback := func(e error) (bool, error) { tx.Rollback(); return false, e }
+
 	const q = `
 INSERT OR IGNORE INTO jobs
-	(id, hash, source, title, link, company, location, seniority, jobType, date, score)
+	(
+		hash, source, title, link, company, location,
+		seniority, jobType,
+		date, score
+	)
 VALUES
-	(?,  ?,    ?,      ?,     ?,    ?,       ?,        ?,         ?,       ?,    ?);`
+	(
+		?,    ?,      ?,     ?,    ?,       ?,
+		NULLIF(?, ''), NULLIF(?, ''),
+		?,    ?
+	);
+`
+
+	if j.Seniority == feed.UnknownSeniority {
+		logging.From(ctx).Warn(
+			"unknown seniority", "seniority", j.Seniority, "title", j.Title, "src", j.Source,
+		)
+	}
+
+	if j.JobType == feed.UnknownJobType {
+		logging.From(ctx).Warn(
+			"unknown jobType", "jobType", j.JobType, "title", j.Title, "src", j.Source,
+		)
+	}
 
 	hash := HashNormalized64(Identifier(j))
 
-	res, err := s.db.ExecContext(
-		ctx, q,
-
-		j.ID,
+	res, err := tx.ExecContext(ctx, q,
 		hash,
 		j.Source,
 		j.Title,
@@ -135,30 +161,62 @@ VALUES
 		string(j.Seniority),
 		string(j.JobType),
 		j.Date.Format(time.RFC3339),
-
-		// insertedAt skipped bcs db default
 		j.Score,
 	)
-
 	if err != nil {
-		log.Println("ERROR: ", err)
+		return rollback(err)
+	}
+
+	for _, raw := range j.Tags {
+		tagNorm := NormalizeTag(raw)
+		if tagNorm == "" {
+			continue
+		}
+
+		// upsert tag row (ignore if exists)
+		if _, err := tx.ExecContext(
+			ctx,
+			`INSERT OR IGNORE INTO tags(name) VALUES(?)`,
+			tagNorm,
+		); err != nil {
+			return rollback(err)
+		}
+
+		var tagID int64
+		if err := tx.QueryRowContext(ctx,
+			`SELECT id FROM tags WHERE name = ?`, tagNorm).Scan(&tagID); err != nil {
+			return rollback(err)
+		}
+
+		// link job <-> tag
+		if _, err := tx.ExecContext(
+			ctx,
+			`INSERT OR IGNORE INTO job_tags(job_hash, tag_id) VALUES(?, ?)`,
+			hash,
+			tagID,
+		); err != nil {
+			return rollback(err)
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
 		return false, err
 	}
 
-	inserted, err2 := res.RowsAffected()
+	newRow, err2 := res.RowsAffected()
 	if err2 != nil {
 		logging.From(ctx).Warn("Getting rows affected", "err", err2)
-	} else if inserted == 0 {
+	} else if newRow == 0 {
 		logging.From(ctx).Debug("duplicate job skipped", "idf", Identifier(j))
 	}
 
-	return inserted == 1, nil
+	return newRow == 1, nil
 }
 
 func (s *JobStore) GetJobs(ctx context.Context, filter string) ([]feed.JobItem, error) {
 	const q = `
 SELECT
-	id, hash, source, title, link, company, location, seniority, jobType, date, score
+	hash, source, title, link, company, location, seniority, jobType, date, score
 FROM
 	jobs
 WHERE
@@ -178,7 +236,6 @@ WHERE
 		)
 		var j feed.JobItem
 		if err := rows.Scan(
-			&j.ID,
 			&j.Hash,
 			&j.Source,
 			&j.Title,

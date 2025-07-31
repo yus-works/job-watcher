@@ -6,7 +6,6 @@ import (
 )
 
 type JobItem struct {
-	ID       string
 	Hash     int64
 	Source   string
 	Title    string
