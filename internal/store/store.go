@@ -44,7 +44,7 @@ func (s *JobStore) Close() error {
 func (s *JobStore) createJobsTable(ctx context.Context) error {
 	const schema = `
 CREATE TABLE IF NOT EXISTS jobs (
-	id          TEXT     PRIMARY KEY AUTOINCREMENT,
+	id          INTEGER  PRIMARY KEY AUTOINCREMENT,
 	hash        INTEGER  NOT NULL UNIQUE,
 	source      TEXT     NOT NULL,
 	title       TEXT     NOT NULL,
@@ -77,10 +77,35 @@ CREATE TABLE IF NOT EXISTS jobs (
 	return err
 }
 
+func (s *JobStore) createTagsTables(ctx context.Context) error {
+	const schema = `
+CREATE TABLE tags (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL UNIQUE,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- join table
+CREATE TABLE job_tags (
+  job_id INTEGER NOT NULL,
+  tag_id INTEGER NOT NULL,
+  PRIMARY KEY (job_id, tag_id),
+  FOREIGN KEY (job_id) REFERENCES jobs(id) ON DELETE CASCADE,
+  FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+);`
+
+	_, err := s.db.ExecContext(ctx, schema)
+	return err
+}
+
 func (s *JobStore) CreateTables(ctx context.Context) error {
 	var err error
+
 	if err = s.createJobsTable(ctx); err != nil {
 		return fmt.Errorf("Failed to create Jobs table: %w", err)
+	}
+	if err = s.createTagsTables(ctx); err != nil {
+		return fmt.Errorf("Failed to create Tags tables table: %w", err)
 	}
 
 	return nil
