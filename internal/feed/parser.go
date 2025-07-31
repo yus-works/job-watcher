@@ -22,8 +22,8 @@ func makeExtractor(
 	}
 }
 
-func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
-	out := make([]Item, 0, len(objs))
+func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) {
+	out := make([]JobItem, 0, len(objs))
 	now := time.Now()
 	m := curr.Mapper
 
@@ -46,7 +46,7 @@ func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
 			age = now.Sub(when)
 		}
 
-		item := Item{
+		item := JobItem{
 			Source:   curr.Name,
 			Title:    title,
 			Link:     link,
@@ -84,7 +84,7 @@ func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
 	return out, nil
 }
 
-func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
+func ParseRSS(curr Feed, body io.Reader) ([]JobItem, error) {
 	parser := gofeed.NewParser()
 
 	items, err := parser.Parse(body)
@@ -92,7 +92,7 @@ func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
 		return nil, fmt.Errorf("ERROR: parsing feed: %w", err)
 	}
 
-	out := make([]Item, 0, len(items.Items))
+	out := make([]JobItem, 0, len(items.Items))
 
 	now := time.Now()
 
@@ -130,7 +130,7 @@ func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
 			age = max(now.Sub(when), 0)
 		}
 
-		item := Item{
+		item := JobItem{
 			Source:   curr.Name,
 			Link:     extractor(cfg.LinkField, "link"),
 			Title:    title,

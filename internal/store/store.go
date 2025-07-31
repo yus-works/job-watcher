@@ -35,7 +35,7 @@ func Identifier(j Job) string {
 	return j.Title + "|" + j.Company
 }
 
-func FromFeedItem(fi feed.Item) Job {
+func FromFeedItem(fi feed.JobItem) Job {
 	return Job{}
 }
 

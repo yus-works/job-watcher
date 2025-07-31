@@ -16,7 +16,7 @@ import (
 	"github.com/yus-works/job-watcher/internal/perf"
 )
 
-func getItems(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.Item, error) {
+func getItems(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.JobItem, error) {
 	body, err := fetch(ctx, c, feed)
 	if err != nil {
 		log.Printf("Failed to fetch items (%s)", feed.Name)
@@ -76,8 +76,8 @@ func Stream(
 	ctx context.Context,
 	feeds []feed.Feed,
 	client *http.Client,
-) <-chan feed.Item {
-	out := make(chan feed.Item, 64)
+) <-chan feed.JobItem {
+	out := make(chan feed.JobItem, 64)
 
 	var wg sync.WaitGroup
 

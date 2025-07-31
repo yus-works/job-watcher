@@ -5,8 +5,7 @@ import (
 	"time"
 )
 
-// TODO: wait is Item and Job totally redundant? could I just use one of them?
-type Item struct {
+type JobItem struct {
 	Source   string
 	Title    string
 	Link     string
@@ -26,5 +25,5 @@ type Feed struct {
 	Name   string
 	URL    string
 	Mapper Mapper
-	Parse  func(curr Feed, body io.Reader) ([]Item, error)
+	Parse  func(curr Feed, body io.Reader) ([]JobItem, error)
 }
