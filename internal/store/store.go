@@ -87,8 +87,6 @@ VALUES
 
 	hash := HashNormalized64(Identifier(j))
 
-	fmt.Println(hash)
-
 	res, err := s.db.ExecContext(
 		ctx, q,
 
@@ -107,8 +105,6 @@ VALUES
 		// insertedAt skipped bcs db default
 		j.Score,
 	)
-
-	fmt.Printf("%v\n", j)
 
 	if err != nil {
 		log.Println("ERROR: ", err)
