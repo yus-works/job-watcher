@@ -108,6 +108,8 @@ VALUES
 
 	hash := HashNormalized64(Identifier(j))
 
+	fmt.Println(hash)
+
 	res, err := s.db.ExecContext(
 		ctx, q,
 
@@ -127,6 +129,8 @@ VALUES
 		j.Score,
 	)
 
+	fmt.Printf("%v\n", j)
+
 	if err != nil {
 		log.Println("ERROR: ", err)
 		return false, err
@@ -134,9 +138,9 @@ VALUES
 
 	inserted, err2 := res.RowsAffected()
 	if err2 != nil {
-		logging.From(ctx).Warn("Getting rows affected: %v", err2)
+		logging.From(ctx).Warn("Getting rows affected", "err", err2)
 	} else if inserted == 0 {
-		logging.From(ctx).Debug("duplicate job skipped: %s", Identifier(j))
+		logging.From(ctx).Debug("duplicate job skipped", "idf", Identifier(j))
 	}
 
 	return inserted == 1, nil
