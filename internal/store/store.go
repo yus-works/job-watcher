@@ -62,7 +62,6 @@ CREATE TABLE IF NOT EXISTS jobs (
 	date        TEXT     NOT NULL,
 	
 	inserted_at TEXT     DEFAULT CURRENT_TIMESTAMP,
-	updated_at  TEXT     DEFAULT CURRENT_TIMESTAMP,
 	score       REAL     DEFAULT 1.0
 ) STRICT;`
 
