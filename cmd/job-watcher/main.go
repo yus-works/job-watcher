@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	logg, closer, err := logging.New(logrus.DebugLevel, "job-watcher.log")
+	logg, closer, err := logging.New(logrus.InfoLevel, "job-watcher.log")
 
 	if err != nil {
 		log.Fatalf("logger init: %v", err)
