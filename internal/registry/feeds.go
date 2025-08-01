@@ -45,7 +45,8 @@ func (m infostudMapper) Location(
 	decode func(val, field string) string,
 ) string {
 	s := decode(m.DescriptionField, "title")
-	return strings.Split(s, " - ")[1]
+	ssplit := strings.Split(s, " - ")
+	return ssplit[len(ssplit)-1]
 }
 
 // TODO: add refreshPeriod field to each feed
