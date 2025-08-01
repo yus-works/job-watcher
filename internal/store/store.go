@@ -265,14 +265,27 @@ WHERE
 			return nil, err
 		}
 
-		if j.Seniority, err = feed.ParseSeniority(log, seniorityStr.String); err != nil {
-			return nil, err
+		// NOTE: only parse when present; otherwise leave Unknown*
+		if seniorityStr.Valid && seniorityStr.String != "" {
+			if j.Seniority, err = feed.ParseSeniority(log, seniorityStr.String); err != nil {
+				j.Seniority = feed.UnknownSeniority
+			}
 		}
-		if j.JobType, err = feed.ParseJobType(log, jobTypeStr.String); err != nil {
-			return nil, err
+		if jobTypeStr.Valid && jobTypeStr.String != "" {
+			if j.JobType, err = feed.ParseJobType(log, jobTypeStr.String); err != nil {
+				j.JobType = feed.UnknownJobType
+			}
 		}
-		if j.Date, err = time.Parse("2006-01-02", dateStr.String); err != nil {
-			return nil, err
+
+		// dates are stored as RFC3339; fall back to yyyy-mm-dd just in case
+		if dateStr.Valid && dateStr.String != "" {
+			if t, err := time.Parse(time.RFC3339, dateStr.String); err == nil {
+				j.Date = t
+			} else if t, err := time.Parse("2006-01-02", dateStr.String); err == nil {
+				j.Date = t
+			} else {
+				return nil, fmt.Errorf("invalid date in DB: %q: %w", dateStr.String, err)
+			}
 		}
 
 		out = append(out, j)
