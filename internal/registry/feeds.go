@@ -30,8 +30,10 @@ func (m weworkMapper) Company(
 	return strings.Split(s, ": ")[0]
 }
 
+// TODO: add refreshPeriod field to each feed
+// that triggers the refresh routine or something
 var FEEDS = []feed.Feed{
-	// 	"https://weworkremotely.com/categories/remote-programming-jobs.rss",
+	// TODO: register the rest of the feeds
 	// 	"http://rss.infostud.com/poslovi/",
 	// 	"https://profession.hu/allasok?rss",
 	// 	"https://mernokallasok.hu/rss_friss.xml",
