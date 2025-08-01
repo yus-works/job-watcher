@@ -31,7 +31,7 @@ func (m weworkMapper) Company(
 }
 
 var FEEDS = []feed.Feed{
-	// 	"https://weworkremotely.com/categories/remote-programming-jobs.rss",
+	// TODO: register the rest of the feeds
 	// 	"http://rss.infostud.com/poslovi/",
 	// 	"https://profession.hu/allasok?rss",
 	// 	"https://mernokallasok.hu/rss_friss.xml",
