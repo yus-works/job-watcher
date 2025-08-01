@@ -111,6 +111,7 @@ func ParseRSS(log *logrus.Entry, curr Feed, body io.Reader) ([]JobItem, error) {
 		cfg := curr.Mapper.GetConfig()
 		feeditem := FeedItemWrapped{fi}
 
+		// TODO: clarify
 		extractor := func(selector, field string) string {
 			if v, err := feeditem.Get(selector); err == nil {
 				return v
@@ -123,11 +124,15 @@ func ParseRSS(log *logrus.Entry, curr Feed, body io.Reader) ([]JobItem, error) {
 			return ""
 		}
 
+		// TODO: clarify
 		title := curr.Mapper.Title(func(_, _ string) string {
 			return extractor(cfg.TitleField, "title")
 		})
 		company := curr.Mapper.Company(func(_, _ string) string {
 			return extractor(cfg.CompanyField, "company")
+		})
+		location := curr.Mapper.Location(func(_, _ string) string {
+			return extractor(cfg.LocationField, "location")
 		})
 
 		var age time.Duration
@@ -140,7 +145,7 @@ func ParseRSS(log *logrus.Entry, curr Feed, body io.Reader) ([]JobItem, error) {
 			Link:     extractor(cfg.LinkField, "link"),
 			Title:    title,
 			Company:  company,
-			Location: extractor(cfg.LocationField, "location"),
+			Location: location,
 			Date:     when,
 			Age:      age,
 		}

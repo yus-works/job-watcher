@@ -16,6 +16,8 @@ func (i FeedItemWrapped) Get(field string) (string, error) {
 		str = i.Title
 	case "link":
 		str = i.Link
+	case "description":
+		str = i.Description
 	default:
 		str = i.Custom[field]
 	}

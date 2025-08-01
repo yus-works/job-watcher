@@ -30,13 +30,27 @@ func (m weworkMapper) Company(
 	return strings.Split(s, ": ")[0]
 }
 
+type infostudMapper struct {
+	feed.DefaultMapper
+}
+
+func (m infostudMapper) Company(
+	decode func(val, field string) string,
+) string {
+	s := decode(m.DescriptionField, "title")
+	return strings.Split(s, " - ")[0]
+}
+
+func (m infostudMapper) Location(
+	decode func(val, field string) string,
+) string {
+	s := decode(m.DescriptionField, "title")
+	return strings.Split(s, " - ")[1]
+}
+
 // TODO: add refreshPeriod field to each feed
 // that triggers the refresh routine or something
 var FEEDS = []feed.Feed{
-	// TODO: register the rest of the feeds
-	// 	"http://rss.infostud.com/poslovi/",
-	// 	"https://profession.hu/allasok?rss",
-	// 	"https://mernokallasok.hu/rss_friss.xml",
 	{
 		// TODO: "https://remotive.com/api/remote-jobs?category=software-dev",
 		Name: "Remotive",
@@ -150,6 +164,21 @@ var FEEDS = []feed.Feed{
 				CompanyField: "title",
 
 				LocationField: "region",
+				DateField:     "pubDate",
+			},
+		},
+		Parse: feed.ParseRSS,
+	},
+	{
+		Name: "Infostud",
+		// TODO: url: "http://rss.infostud.com/poslovi/"
+		URL: "http://localhost:8000/infostud.rss",
+		Mapper: infostudMapper{
+			DefaultMapper: feed.DefaultMapper{
+				TitleField:    "title",
+				LinkField:     "link",
+				CompanyField:  "description",
+				LocationField: "description",
 				DateField:     "pubDate",
 			},
 		},

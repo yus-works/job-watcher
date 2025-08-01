@@ -24,13 +24,14 @@ type Mapper interface {
 //
 // NOTE: Any omitted fields WILL BE IGNORED
 type DefaultMapper struct {
-	TitleField     string
-	CompanyField   string
-	SeniorityField string
-	LinkField      string
-	LocationField  string
-	JobTypeField   string
-	DateField      string
+	TitleField       string
+	CompanyField     string
+	DescriptionField string
+	SeniorityField   string
+	LinkField        string
+	LocationField    string
+	JobTypeField     string
+	DateField        string
 }
 
 type Config struct {
@@ -48,6 +49,12 @@ func (m DefaultMapper) Title(
 }
 
 func (m DefaultMapper) Company(
+	decode func(val, field string) string,
+) string {
+	return decode(m.CompanyField, "company")
+}
+
+func (m DefaultMapper) Description(
 	decode func(val, field string) string,
 ) string {
 	return decode(m.CompanyField, "company")
