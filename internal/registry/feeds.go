@@ -15,7 +15,6 @@ type weworkMapper struct {
 	feed.DefaultMapper
 }
 
-// TODO: make decode explicitly fallible ?
 func (m weworkMapper) Title(
 	decode func(val, field string) string,
 ) string {
