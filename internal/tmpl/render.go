@@ -5,22 +5,24 @@ import (
 	"context"
 	"html/template"
 
-	"github.com/yus-works/job-watcher/internal/logging"
+	"github.com/sirupsen/logrus"
 )
 
 func Render(
+	log *logrus.Entry,
 	ctx context.Context,
-	t *template.Template,
+	tl *template.Template,
 	name string,
 	data any,
 ) (string, error) {
 	var buf bytes.Buffer
-	err := t.ExecuteTemplate(&buf, name, data)
+	err := tl.ExecuteTemplate(&buf, name, data)
 	if err != nil {
-		logging.From(ctx).Error(
-			"Failed to execute template",
-			"name", name,
-			"err", err,
+		log.WithFields(logrus.Fields{
+			"name": name,
+			"err":  err,
+		}).Error(
+			"execute template",
 		)
 		return "Failed to render 'card'", err
 	}
