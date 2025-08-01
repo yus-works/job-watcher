@@ -10,6 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
+// TODO: probably better using ...map isntead of passing nil
 func StartTimer(
 	log *logrus.Entry,
 	level logrus.Level,
