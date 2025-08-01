@@ -1,12 +1,12 @@
 package registry
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"github.com/yus-works/job-watcher/internal/feed"
 )
 
@@ -58,7 +58,7 @@ var FEEDS = []feed.Feed{
 			LocationField: "location",
 			JobTypeField:  "type",
 		},
-		Parse: func(ctx context.Context, curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
+		Parse: func(log *logrus.Entry, curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
 			var rawItems = make([]map[string]json.RawMessage, 0)
 			dec := json.NewDecoder(body)
 
@@ -66,7 +66,7 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := feed.ParseJSON(ctx, curr, rawItems)
+			items, err := feed.ParseJSON(log, curr, rawItems)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}
@@ -86,7 +86,7 @@ var FEEDS = []feed.Feed{
 			DateField:      "pubDate",
 			SeniorityField: "jobLevel",
 		},
-		Parse: func(ctx context.Context, curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
+		Parse: func(log *logrus.Entry, curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
 			var payload = struct {
 				Jobs []map[string]json.RawMessage `json:"jobs"`
 			}{}
@@ -96,7 +96,7 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := feed.ParseJSON(ctx, curr, payload.Jobs)
+			items, err := feed.ParseJSON(log, curr, payload.Jobs)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}
@@ -118,7 +118,7 @@ var FEEDS = []feed.Feed{
 			// NOTE: Himalayas date is last updated, not first time posted
 			DateField: "pubDate",
 		},
-		Parse: func(ctx context.Context, curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
+		Parse: func(log *logrus.Entry, curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
 			var payload = struct {
 				Jobs []map[string]json.RawMessage `json:"jobs"`
 			}{}
@@ -128,7 +128,7 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := feed.ParseJSON(ctx, curr, payload.Jobs)
+			items, err := feed.ParseJSON(log, curr, payload.Jobs)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}

@@ -9,8 +9,8 @@ import (
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
+	"github.com/sirupsen/logrus"
 	"github.com/yus-works/job-watcher/internal/feed"
-	"github.com/yus-works/job-watcher/internal/logging"
 )
 
 func Identifier(j feed.JobItem) string {
@@ -113,7 +113,11 @@ func (s *JobStore) CreateTables(ctx context.Context) error {
 	return nil
 }
 
-func (s *JobStore) Insert(ctx context.Context, j feed.JobItem) (bool, error) {
+func (s *JobStore) Insert(
+	log *logrus.Entry,
+	ctx context.Context,
+	j feed.JobItem,
+) (bool, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return false, err
@@ -136,15 +140,19 @@ VALUES
 `
 
 	if j.Seniority == feed.UnknownSeniority {
-		logging.From(ctx).Warn(
-			"unknown seniority", "seniority", j.Seniority, "title", j.Title, "src", j.Source,
-		)
+		log.WithFields(logrus.Fields{
+			"seniority": j.Seniority,
+			"title":     j.Title,
+			"src":       j.Source,
+		}).Warn("unknown seniority")
 	}
 
 	if j.JobType == feed.UnknownJobType {
-		logging.From(ctx).Warn(
-			"unknown jobType", "jobType", j.JobType, "title", j.Title, "src", j.Source,
-		)
+		log.WithFields(logrus.Fields{
+			"jobType": j.JobType,
+			"title":   j.Title,
+			"src":     j.Source,
+		}).Warn("unknown seniority")
 	}
 
 	hash := HashNormalized64(Identifier(j))
@@ -204,9 +212,13 @@ VALUES
 
 	newRow, err2 := res.RowsAffected()
 	if err2 != nil {
-		logging.From(ctx).Warn("Getting rows affected", "err", err2)
+		log.WithFields(logrus.Fields{
+			"err": err2,
+		}).Warn("getting rows affected")
 	} else if newRow == 0 {
-		logging.From(ctx).Debug("duplicate job skipped", "idf", Identifier(j))
+		log.WithFields(logrus.Fields{
+			"identifier": Identifier(j),
+		}).Debug("duplicate job skipped")
 	}
 
 	return newRow == 1, nil
@@ -229,10 +241,8 @@ WHERE
 
 	var out []feed.JobItem
 	for rows.Next() {
-		var (
-			seniorityStr string
-			jobTypeStr   string
-		)
+		var seniorityStr, jobTypeStr, dateStr sql.NullString
+
 		var j feed.JobItem
 		if err := rows.Scan(
 			&j.Hash,
@@ -242,18 +252,22 @@ WHERE
 			&j.Company,
 			&j.Location,
 
-			&j.Date,
+			&seniorityStr,
+			&jobTypeStr,
+			&dateStr,
 
-			&j.InsertedAt,
 			&j.Score,
 		); err != nil {
 			return nil, err
 		}
 
-		if j.Seniority, err = feed.ParseSeniority(seniorityStr); err != nil {
+		if j.Seniority, err = feed.ParseSeniority(seniorityStr.String); err != nil {
 			return nil, err
 		}
-		if j.JobType, err = feed.ParseJobType(jobTypeStr); err != nil {
+		if j.JobType, err = feed.ParseJobType(jobTypeStr.String); err != nil {
+			return nil, err
+		}
+		if j.Date, err = time.Parse("2006-01-02", dateStr.String); err != nil {
 			return nil, err
 		}
 

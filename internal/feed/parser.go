@@ -1,14 +1,13 @@
 package feed
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"time"
 
 	"github.com/mmcdole/gofeed"
-	"github.com/yus-works/job-watcher/internal/logging"
+	"github.com/sirupsen/logrus"
 )
 
 func makeExtractor(
@@ -23,7 +22,7 @@ func makeExtractor(
 	}
 }
 
-func ParseJSON(ctx context.Context, curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) {
+func ParseJSON(log *logrus.Entry, curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) {
 	out := make([]JobItem, 0, len(objs))
 	now := time.Now()
 	m := curr.Mapper
@@ -61,7 +60,9 @@ func ParseJSON(ctx context.Context, curr Feed, objs []map[string]json.RawMessage
 		if jobTypeStr != "" {
 			jobType, err := ParseJobType(jobTypeStr)
 			if err != nil {
-				logging.From(ctx).Warn("Failed to parse jobTypeStr: ", "err", err)
+				log.WithFields(logrus.Fields{
+					"err": err,
+				}).Warn("parse jobTypeStr")
 			}
 
 			item.JobType = jobType
@@ -70,7 +71,9 @@ func ParseJSON(ctx context.Context, curr Feed, objs []map[string]json.RawMessage
 		if seniorityStr != "" {
 			seniority, err := ParseSeniority(seniorityStr)
 			if err != nil {
-				logging.From(ctx).Warn("Failed to parse seniorityStr: ", "err", err)
+				log.WithFields(logrus.Fields{
+					"err": err,
+				}).Warn("parse seniorityStr")
 			}
 
 			item.Seniority = seniority
@@ -85,7 +88,7 @@ func ParseJSON(ctx context.Context, curr Feed, objs []map[string]json.RawMessage
 	return out, nil
 }
 
-func ParseRSS(ctx context.Context, curr Feed, body io.Reader) ([]JobItem, error) {
+func ParseRSS(log *logrus.Entry, curr Feed, body io.Reader) ([]JobItem, error) {
 	parser := gofeed.NewParser()
 
 	items, err := parser.Parse(body)
@@ -112,11 +115,11 @@ func ParseRSS(ctx context.Context, curr Feed, body io.Reader) ([]JobItem, error)
 			if v, err := feeditem.Get(selector); err == nil {
 				return v
 			}
-			// FIXME: this is probably wrong idk
-			logging.From(ctx).Warn(
-				"Failed to get", "field", field,
-				"with", selector, "for", curr.Name,
-			)
+			log.WithFields(logrus.Fields{
+				"field": field,
+				"with":  selector,
+				"for":   curr.Name,
+			}).Warn("get")
 			return ""
 		}
 
@@ -147,7 +150,9 @@ func ParseRSS(ctx context.Context, curr Feed, body io.Reader) ([]JobItem, error)
 			if jobTypeStr != "" {
 				jobType, err := ParseJobType(jobTypeStr)
 				if err != nil {
-					logging.From(ctx).Warn("Failed to parse jobTypeStr: ", "err", err)
+					log.WithFields(logrus.Fields{
+						"err": err,
+					}).Warn("parse jobTypeStr")
 				}
 
 				item.JobType = jobType

@@ -3,38 +3,41 @@ package refresh
 // TODO: move refresh out of comp its not a component
 import (
 	"fmt"
-	"log/slog"
 	"net/http"
 
+	"github.com/sirupsen/logrus"
 	"github.com/yus-works/job-watcher/internal/fetch"
-	"github.com/yus-works/job-watcher/internal/logging"
 	"github.com/yus-works/job-watcher/internal/perf"
 	"github.com/yus-works/job-watcher/internal/registry"
 	"github.com/yus-works/job-watcher/internal/store"
 )
 
 func Register(
-	s *store.JobStore,
-	c *http.Client,
+	log *logrus.Entry,
+	st *store.JobStore,
+	cl *http.Client,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-Type", "text/plain")
 		ctx := req.Context()
 
-		itemsCh := fetch.Stream(ctx, registry.FEEDS, c)
+		itemsCh := fetch.Stream(log, ctx, registry.FEEDS, cl)
 
-		stopTotal, _ := perf.StartTimer(ctx, slog.LevelDebug, "jobs_total")
-		defer stopTotal()
+		stopTotal, _ := perf.StartTimer(log, logrus.DebugLevel, "jobs_total")
+		defer stopTotal(nil) // TODO: this might break idk
 
 		insertedCount := 0
 		skippedCount := 0
 
 		for it := range itemsCh {
-			inserted, err := s.Insert(ctx, it)
+			inserted, err := st.Insert(log, ctx, it)
 			if err != nil {
 				msg := fmt.Sprintf("insert failed: %v", err)
 
-				logging.From(ctx).Warn(msg)
+				log.WithFields(logrus.Fields{
+					"err": err,
+				}).Warn("insert item")
+
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(w, msg)
 				return

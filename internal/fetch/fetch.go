@@ -5,28 +5,36 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log/slog"
 	"net/http"
 	"net/http/httptrace"
 	"sync"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/yus-works/job-watcher/internal/feed"
-	"github.com/yus-works/job-watcher/internal/logging"
 	"github.com/yus-works/job-watcher/internal/perf"
 )
 
-func getItems(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.JobItem, error) {
-	body, err := fetch(ctx, c, feed)
+func getItems(
+	log *logrus.Entry,
+	ctx context.Context,
+	c *http.Client,
+	feed feed.Feed,
+) ([]feed.JobItem, error) {
+	body, err := fetch(log, ctx, c, feed)
 	if err != nil {
-		logging.From(ctx).Error("Failed to fetch items", "source", feed.Name)
+		log.WithFields(logrus.Fields{
+			"source": feed.Name,
+		}).Error("fetch items")
 	}
 
 	defer body.Close()
 
-	items, err := feed.Parse(ctx, feed, body)
+	items, err := feed.Parse(log, feed, body)
 	if err != nil {
-		logging.From(ctx).Error("Failed to parse items", "source", feed.Name)
+		log.WithFields(logrus.Fields{
+			"source": feed.Name,
+		}).Error("parse items")
 	}
 
 	return items, nil
@@ -37,7 +45,12 @@ type netTimings struct {
 	dns, conn, tls, ttfb time.Duration
 }
 
-func fetch(ctx context.Context, c *http.Client, f feed.Feed) (io.ReadCloser, error) {
+func fetch(
+	log *logrus.Entry,
+	ctx context.Context,
+	c *http.Client,
+	f feed.Feed,
+) (io.ReadCloser, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, f.URL, nil)
 	if err != nil {
 		return nil, err
@@ -47,10 +60,13 @@ func fetch(ctx context.Context, c *http.Client, f feed.Feed) (io.ReadCloser, err
 	// attach httptrace only if debug enabled
 	trace, done := perf.NetTrace(
 		ctx,
-		slog.LevelDebug,
+		log,
+		logrus.DebugLevel,
 		"fetch",
-		slog.String("feed", f.Name),
-		slog.String("url", f.URL),
+		logrus.Fields{
+			"feed": f.Name,
+			"url":  f.URL,
+		},
 	)
 	if trace != nil {
 		req = req.WithContext(httptrace.WithClientTrace(req.Context(), trace))
@@ -73,6 +89,7 @@ func fetch(ctx context.Context, c *http.Client, f feed.Feed) (io.ReadCloser, err
 }
 
 func Stream(
+	log *logrus.Entry,
 	ctx context.Context,
 	feeds []feed.Feed,
 	client *http.Client,
@@ -90,9 +107,12 @@ func Stream(
 		go func() {
 			defer wg.Done()
 
-			items, err := getItems(ctx, client, feed)
+			items, err := getItems(log, ctx, client, feed)
 			if err != nil {
-				logging.From(ctx).Warn("Failed to fetch", "url", feed.URL, "err", err)
+				log.WithFields(logrus.Fields{
+					"url": feed.URL,
+					"err": err,
+				}).Warn("fetch items")
 				return
 			}
 

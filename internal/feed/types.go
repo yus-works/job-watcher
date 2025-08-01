@@ -4,7 +4,7 @@ import (
 	"io"
 	"time"
 
-	"golang.org/x/net/context"
+	"github.com/sirupsen/logrus"
 )
 
 type JobItem struct {
@@ -32,7 +32,7 @@ type Feed struct {
 	URL    string
 	Mapper Mapper
 	Parse  func(
-		ctx context.Context,
+		log *logrus.Entry,
 		curr Feed,
 		body io.Reader,
 	) ([]JobItem, error)

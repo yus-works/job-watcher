@@ -7,14 +7,19 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/sirupsen/logrus"
 	"github.com/yus-works/job-watcher/internal/component/home"
 	"github.com/yus-works/job-watcher/internal/component/jobs"
 	"github.com/yus-works/job-watcher/internal/component/refresh"
 	"github.com/yus-works/job-watcher/internal/store"
 )
 
-func NewRouter(t *template.Template, s *store.JobStore) *http.ServeMux {
-	mux := http.NewServeMux()
+func NewRouter(
+	t *template.Template,
+	s *store.JobStore,
+	l *logrus.Logger,
+) *http.ServeMux {
+	m := http.NewServeMux()
 
 	fastResolver := &net.Resolver{
 		PreferGo: true,
@@ -37,10 +42,10 @@ func NewRouter(t *template.Template, s *store.JobStore) *http.ServeMux {
 	}
 	c := &http.Client{Transport: tr, Timeout: 10 * time.Second}
 
-	registerFS(mux)
-	registerHandlers(mux, t, s, c)
+	registerFS(m)
+	registerHandlers(l, m, t, s, c)
 
-	return mux
+	return m
 }
 
 func registerFS(m *http.ServeMux) {
@@ -51,12 +56,26 @@ func registerFS(m *http.ServeMux) {
 }
 
 func registerHandlers(
+	l logrus.FieldLogger,
 	m *http.ServeMux,
 	t *template.Template,
 	s *store.JobStore,
 	c *http.Client,
 ) {
-	m.HandleFunc("/", home.Register(t, s))
-	m.HandleFunc("/jobs", jobs.Register(t, c))
-	m.HandleFunc("/refresh", refresh.Register(s, c))
+	mkLogger := func(r *http.Request) *logrus.Entry {
+		return l.WithFields(logrus.Fields{
+			"path": r.URL.Path,
+		})
+	}
+
+	// FIXME: too much voodoo
+	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		home.Register(mkLogger(r), t, s)(w, r)
+	})
+	m.HandleFunc("/jobs", func(w http.ResponseWriter, r *http.Request) {
+		jobs.Register(mkLogger(r), t, s, c)(w, r)
+	})
+	m.HandleFunc("/refresh", func(w http.ResponseWriter, r *http.Request) {
+		refresh.Register(mkLogger(r), s, c)(w, r)
+	})
 }
