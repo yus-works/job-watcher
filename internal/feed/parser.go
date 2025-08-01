@@ -4,10 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"time"
 
 	"github.com/mmcdole/gofeed"
+	"github.com/sirupsen/logrus"
 )
 
 func makeExtractor(
@@ -22,8 +22,8 @@ func makeExtractor(
 	}
 }
 
-func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
-	out := make([]Item, 0, len(objs))
+func ParseJSON(log *logrus.Entry, curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) {
+	out := make([]JobItem, 0, len(objs))
 	now := time.Now()
 	m := curr.Mapper
 
@@ -46,7 +46,7 @@ func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
 			age = now.Sub(when)
 		}
 
-		item := Item{
+		item := JobItem{
 			Source:   curr.Name,
 			Title:    title,
 			Link:     link,
@@ -58,18 +58,22 @@ func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
 		}
 
 		if jobTypeStr != "" {
-			jobType, err := ParseJobType(jobTypeStr)
+			jobType, err := ParseJobType(log, jobTypeStr)
 			if err != nil {
-				log.Println("Failed to parse jobTypeStr: ", err)
+				log.WithFields(logrus.Fields{
+					"err": err,
+				}).Warn("parse jobTypeStr")
 			}
 
 			item.JobType = jobType
 		}
 
 		if seniorityStr != "" {
-			seniority, err := ParseSeniority(seniorityStr)
+			seniority, err := ParseSeniority(log, seniorityStr)
 			if err != nil {
-				log.Println("Failed to parse seniorityStr: ", err)
+				log.WithFields(logrus.Fields{
+					"err": err,
+				}).Warn("parse seniorityStr")
 			}
 
 			item.Seniority = seniority
@@ -84,7 +88,7 @@ func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]Item, error) {
 	return out, nil
 }
 
-func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
+func ParseRSS(log *logrus.Entry, curr Feed, body io.Reader) ([]JobItem, error) {
 	parser := gofeed.NewParser()
 
 	items, err := parser.Parse(body)
@@ -92,7 +96,7 @@ func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
 		return nil, fmt.Errorf("ERROR: parsing feed: %w", err)
 	}
 
-	out := make([]Item, 0, len(items.Items))
+	out := make([]JobItem, 0, len(items.Items))
 
 	now := time.Now()
 
@@ -111,10 +115,11 @@ func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
 			if v, err := feeditem.Get(selector); err == nil {
 				return v
 			}
-			log.Printf(
-				"Failed to get %s with (%s) for (%s)",
-				field, selector, curr.Name,
-			)
+			log.WithFields(logrus.Fields{
+				"field": field,
+				"with":  selector,
+				"for":   curr.Name,
+			}).Warn("get")
 			return ""
 		}
 
@@ -130,7 +135,7 @@ func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
 			age = max(now.Sub(when), 0)
 		}
 
-		item := Item{
+		item := JobItem{
 			Source:   curr.Name,
 			Link:     extractor(cfg.LinkField, "link"),
 			Title:    title,
@@ -143,9 +148,11 @@ func ParseRSS(curr Feed, body io.Reader) ([]Item, error) {
 		if cfg.JobTypeField != "" {
 			jobTypeStr := extractor(cfg.JobTypeField, "job type")
 			if jobTypeStr != "" {
-				jobType, err := ParseJobType(jobTypeStr)
+				jobType, err := ParseJobType(log, jobTypeStr)
 				if err != nil {
-					log.Println("Failed to parse jobTypeStr: ", err)
+					log.WithFields(logrus.Fields{
+						"err": err,
+					}).Warn("parse jobTypeStr")
 				}
 
 				item.JobType = jobType

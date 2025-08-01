@@ -2,19 +2,28 @@ package tmpl
 
 import (
 	"bytes"
+	"context"
 	"html/template"
-	"log"
+
+	"github.com/sirupsen/logrus"
 )
 
 func Render(
-	t *template.Template,
+	log *logrus.Entry,
+	ctx context.Context,
+	tl *template.Template,
 	name string,
 	data any,
 ) (string, error) {
 	var buf bytes.Buffer
-	err := t.ExecuteTemplate(&buf, name, data)
+	err := tl.ExecuteTemplate(&buf, name, data)
 	if err != nil {
-		log.Printf("ERROR: Executing template %s: %v", name, err)
+		log.WithFields(logrus.Fields{
+			"name": name,
+			"err":  err,
+		}).Error(
+			"execute template",
+		)
 		return "Failed to render 'card'", err
 	}
 	return buf.String(), nil

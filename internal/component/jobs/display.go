@@ -5,16 +5,16 @@ import (
 )
 
 type DisplayItem struct {
-	feed.Item
+	feed.JobItem
 	Seniority string
 	JobType   string
 	Date      string
 	Age       string
 }
 
-func NewDisplayItem(i feed.Item) DisplayItem {
+func NewDisplayItem(i feed.JobItem) DisplayItem {
 	return DisplayItem{
-		Item: i,
+		JobItem: i,
 
 		Seniority: string(i.Seniority),
 		JobType:   string(i.JobType),
