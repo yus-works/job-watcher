@@ -1,5 +1,6 @@
 package jobs
 
+// TODO: separate job list vs job listing card as components
 import (
 	"fmt"
 	"html/template"

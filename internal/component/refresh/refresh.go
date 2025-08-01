@@ -1,5 +1,6 @@
 package refresh
 
+// TODO: move refresh out of comp its not a component
 import (
 	"fmt"
 	"log/slog"
