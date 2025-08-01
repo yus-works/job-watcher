@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"html/template"
 	"log"
 	"net/http"
@@ -26,6 +27,12 @@ func main() {
 		logg.WithError(err).Fatal("open db")
 	}
 	defer st.Close()
+
+	err = st.CreateTables(context.Background())
+	if err != nil {
+		log.Println(err)
+		return
+	}
 
 	mux := router.NewRouter(tl, st, logg)
 
