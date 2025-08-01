@@ -26,6 +26,7 @@ func getItems(
 		log.WithFields(logrus.Fields{
 			"source": feed.Name,
 		}).Error("fetch items")
+		return nil, err
 	}
 
 	defer body.Close()
@@ -35,6 +36,7 @@ func getItems(
 		log.WithFields(logrus.Fields{
 			"source": feed.Name,
 		}).Error("parse items")
+		return nil, err
 	}
 
 	return items, nil
