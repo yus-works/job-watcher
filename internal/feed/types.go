@@ -3,6 +3,8 @@ package feed
 import (
 	"io"
 	"time"
+
+	"golang.org/x/net/context"
 )
 
 type JobItem struct {
@@ -29,5 +31,9 @@ type Feed struct {
 	Name   string
 	URL    string
 	Mapper Mapper
-	Parse  func(curr Feed, body io.Reader) ([]JobItem, error)
+	Parse  func(
+		ctx context.Context,
+		curr Feed,
+		body io.Reader,
+	) ([]JobItem, error)
 }

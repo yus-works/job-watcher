@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"log/slog"
 	"net/http"
 	"net/http/httptrace"
@@ -13,20 +12,21 @@ import (
 	"time"
 
 	"github.com/yus-works/job-watcher/internal/feed"
+	"github.com/yus-works/job-watcher/internal/logging"
 	"github.com/yus-works/job-watcher/internal/perf"
 )
 
 func getItems(ctx context.Context, c *http.Client, feed feed.Feed) ([]feed.JobItem, error) {
 	body, err := fetch(ctx, c, feed)
 	if err != nil {
-		log.Printf("Failed to fetch items (%s)", feed.Name)
+		logging.From(ctx).Error("Failed to fetch items", "source", feed.Name)
 	}
 
 	defer body.Close()
 
-	items, err := feed.Parse(feed, body)
+	items, err := feed.Parse(ctx, feed, body)
 	if err != nil {
-		log.Printf("Failed to parse items (%s)", feed.Name)
+		logging.From(ctx).Error("Failed to parse items", "source", feed.Name)
 	}
 
 	return items, nil
@@ -92,7 +92,7 @@ func Stream(
 
 			items, err := getItems(ctx, client, feed)
 			if err != nil {
-				log.Printf("fetch %s: %v", feed.URL, err)
+				logging.From(ctx).Warn("Failed to fetch", "url", feed.URL, "err", err)
 				return
 			}
 

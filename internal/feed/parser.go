@@ -1,13 +1,14 @@
 package feed
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"time"
 
 	"github.com/mmcdole/gofeed"
+	"github.com/yus-works/job-watcher/internal/logging"
 )
 
 func makeExtractor(
@@ -22,7 +23,7 @@ func makeExtractor(
 	}
 }
 
-func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) {
+func ParseJSON(ctx context.Context, curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) {
 	out := make([]JobItem, 0, len(objs))
 	now := time.Now()
 	m := curr.Mapper
@@ -60,7 +61,7 @@ func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) 
 		if jobTypeStr != "" {
 			jobType, err := ParseJobType(jobTypeStr)
 			if err != nil {
-				log.Println("Failed to parse jobTypeStr: ", err)
+				logging.From(ctx).Warn("Failed to parse jobTypeStr: ", "err", err)
 			}
 
 			item.JobType = jobType
@@ -69,7 +70,7 @@ func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) 
 		if seniorityStr != "" {
 			seniority, err := ParseSeniority(seniorityStr)
 			if err != nil {
-				log.Println("Failed to parse seniorityStr: ", err)
+				logging.From(ctx).Warn("Failed to parse seniorityStr: ", "err", err)
 			}
 
 			item.Seniority = seniority
@@ -84,7 +85,7 @@ func ParseJSON(curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) 
 	return out, nil
 }
 
-func ParseRSS(curr Feed, body io.Reader) ([]JobItem, error) {
+func ParseRSS(ctx context.Context, curr Feed, body io.Reader) ([]JobItem, error) {
 	parser := gofeed.NewParser()
 
 	items, err := parser.Parse(body)
@@ -111,9 +112,10 @@ func ParseRSS(curr Feed, body io.Reader) ([]JobItem, error) {
 			if v, err := feeditem.Get(selector); err == nil {
 				return v
 			}
-			log.Printf(
-				"Failed to get %s with (%s) for (%s)",
-				field, selector, curr.Name,
+			// FIXME: this is probably wrong idk
+			logging.From(ctx).Warn(
+				"Failed to get", "field", field,
+				"with", selector, "for", curr.Name,
 			)
 			return ""
 		}
@@ -145,7 +147,7 @@ func ParseRSS(curr Feed, body io.Reader) ([]JobItem, error) {
 			if jobTypeStr != "" {
 				jobType, err := ParseJobType(jobTypeStr)
 				if err != nil {
-					log.Println("Failed to parse jobTypeStr: ", err)
+					logging.From(ctx).Warn("Failed to parse jobTypeStr: ", "err", err)
 				}
 
 				item.JobType = jobType

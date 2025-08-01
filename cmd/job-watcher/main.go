@@ -33,14 +33,16 @@ func main() {
 		logging.Level.Set(slog.LevelInfo)
 	}
 
+	ctx := context.Background()
+
 	store, err := store.NewJobStore("job-store.db")
 	if err != nil {
-		log.Fatal("Failed to open db")
+		logging.From(ctx).Error("Failed to open db")
 	}
 
-	err = store.CreateTables(context.Background())
+	err = store.CreateTables(ctx)
 	if err != nil {
-		log.Println(err)
+		logging.From(ctx).Error("Failed to create tables", "err", err)
 		return
 	}
 

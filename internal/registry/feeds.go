@@ -1,6 +1,7 @@
 package registry
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -57,7 +58,7 @@ var FEEDS = []feed.Feed{
 			LocationField: "location",
 			JobTypeField:  "type",
 		},
-		Parse: func(curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
+		Parse: func(ctx context.Context, curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
 			var rawItems = make([]map[string]json.RawMessage, 0)
 			dec := json.NewDecoder(body)
 
@@ -65,7 +66,7 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := feed.ParseJSON(curr, rawItems)
+			items, err := feed.ParseJSON(ctx, curr, rawItems)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}
@@ -85,7 +86,7 @@ var FEEDS = []feed.Feed{
 			DateField:      "pubDate",
 			SeniorityField: "jobLevel",
 		},
-		Parse: func(curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
+		Parse: func(ctx context.Context, curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
 			var payload = struct {
 				Jobs []map[string]json.RawMessage `json:"jobs"`
 			}{}
@@ -95,7 +96,7 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := feed.ParseJSON(curr, payload.Jobs)
+			items, err := feed.ParseJSON(ctx, curr, payload.Jobs)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}
@@ -117,7 +118,7 @@ var FEEDS = []feed.Feed{
 			// NOTE: Himalayas date is last updated, not first time posted
 			DateField: "pubDate",
 		},
-		Parse: func(curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
+		Parse: func(ctx context.Context, curr feed.Feed, body io.Reader) ([]feed.JobItem, error) {
 			var payload = struct {
 				Jobs []map[string]json.RawMessage `json:"jobs"`
 			}{}
@@ -127,7 +128,7 @@ var FEEDS = []feed.Feed{
 				return nil, fmt.Errorf("Failed to decode body: %w", err)
 			}
 
-			items, err := feed.ParseJSON(curr, payload.Jobs)
+			items, err := feed.ParseJSON(ctx, curr, payload.Jobs)
 			if err != nil {
 				return nil, fmt.Errorf("Failed to parse: %w", err)
 			}
