@@ -10,12 +10,12 @@ import (
 	"github.com/yus-works/job-watcher/internal/store"
 )
 
-func Register(log logrus.FieldLogger, tl *template.Template, st *store.JobStore) http.HandlerFunc {
+func Register(log *logrus.Entry, tl *template.Template, st *store.JobStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		ctx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
 		defer cancel()
 
-		jobs, err := st.GetJobs(ctx, req.URL.Query().Get("search"))
+		jobs, err := st.GetJobs(log, ctx, req.URL.Query().Get("search"))
 		if err != nil {
 			http.Error(w, "timeout or db error", 500)
 			log.WithFields(logrus.Fields{

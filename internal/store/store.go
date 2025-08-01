@@ -224,7 +224,11 @@ VALUES
 	return newRow == 1, nil
 }
 
-func (s *JobStore) GetJobs(ctx context.Context, filter string) ([]feed.JobItem, error) {
+func (s *JobStore) GetJobs(
+	log *logrus.Entry,
+	ctx context.Context,
+	filter string,
+) ([]feed.JobItem, error) {
 	const q = `
 SELECT
 	hash, source, title, link, company, location, seniority, jobType, date, score
@@ -261,10 +265,10 @@ WHERE
 			return nil, err
 		}
 
-		if j.Seniority, err = feed.ParseSeniority(seniorityStr.String); err != nil {
+		if j.Seniority, err = feed.ParseSeniority(log, seniorityStr.String); err != nil {
 			return nil, err
 		}
-		if j.JobType, err = feed.ParseJobType(jobTypeStr.String); err != nil {
+		if j.JobType, err = feed.ParseJobType(log, jobTypeStr.String); err != nil {
 			return nil, err
 		}
 		if j.Date, err = time.Parse("2006-01-02", dateStr.String); err != nil {
@@ -276,7 +280,11 @@ WHERE
 	return out, rows.Err()
 }
 
-func (s *JobStore) StreamJobs(ctx context.Context, filter string) (<-chan feed.JobItem, <-chan error) {
+func (s *JobStore) StreamJobs(
+	log *logrus.Entry,
+	ctx context.Context,
+	filter string,
+) (<-chan feed.JobItem, <-chan error) {
 	jobs := make(chan feed.JobItem)
 	errs := make(chan error, 1)
 
@@ -301,6 +309,7 @@ WHERE
 
 		for rows.Next() {
 			var (
+				// FIXME: SqlStringNilwhatever
 				seniorityStr string
 				jobTypeStr   string
 			)
@@ -322,13 +331,13 @@ WHERE
 				return
 			}
 
-			j.Seniority, err = feed.ParseSeniority(seniorityStr)
+			j.Seniority, err = feed.ParseSeniority(log, seniorityStr)
 			if err != nil {
 				errs <- err
 				return
 			}
 
-			j.JobType, err = feed.ParseJobType(jobTypeStr)
+			j.JobType, err = feed.ParseJobType(log, jobTypeStr)
 			if err != nil {
 				errs <- err
 				return

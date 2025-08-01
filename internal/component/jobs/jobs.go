@@ -5,10 +5,12 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yus-works/job-watcher/internal/perf"
 	"github.com/yus-works/job-watcher/internal/store"
+	"github.com/yus-works/job-watcher/internal/tmpl"
 )
 
 func Register(
@@ -29,11 +31,11 @@ func Register(
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
 
-		// flusher, ok := w.(http.Flusher)
-		// if !ok {
-		// 	http.Error(w, "streaming unsupported", http.StatusInternalServerError)
-		// 	return
-		// }
+		flusher, ok := w.(http.Flusher)
+		if !ok {
+			http.Error(w, "streaming unsupported", http.StatusInternalServerError)
+			return
+		}
 
 		ctx := req.Context()
 
@@ -47,14 +49,18 @@ func Register(
 		stopTTFI, _ := perf.StartTimer(log, logrus.DebugLevel, "ttfi")
 		first := true
 
-		jobsCh, errsCh := st.StreamJobs(ctx, "")
+		jobsCh, errsCh := st.StreamJobs(log, ctx, "")
 
 		for jobsCh != nil || errsCh != nil {
 			select {
 			case job, ok := <-jobsCh:
 				if !ok {
 					jobsCh = nil
-					continue
+
+					// all jobs sent, tell the client we're done
+					fmt.Fprintf(w, "event: done\ndata: bye\n\n")
+					flusher.Flush()
+					return
 				}
 
 				if first {
@@ -65,56 +71,35 @@ func Register(
 					})
 				}
 
-				fmt.Println("got job: ", job)
-				// process job
+				stopRender, _ := perf.StartTimer(log, logrus.DebugLevel, "render")
+				card, err := tmpl.Render(log, ctx, tl, "card", NewDisplayItem(job))
+				stopRender(nil)
+
+				if err != nil {
+					fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", card)
+					flusher.Flush()
+
+					fmt.Fprint(w, "event: done\ndata: bye\n\n")
+					flusher.Flush()
+					return
+				}
+
+				fmt.Fprintf(
+					w,
+					"event: foundJobs\ndata: %s\n\n",
+					strings.ReplaceAll(card, "\n", ""),
+				)
+				flusher.Flush()
 			case err, ok := <-errsCh:
 				if !ok {
 					errsCh = nil
 					continue
 				}
 
-				fmt.Println("got err: ", err)
-				// process err
+				log.WithFields(logrus.Fields{
+					"err": err,
+				}).Error("fetch jobs")
 			}
 		}
-		// select {
-		// case it, ok := <-itemsCh:
-		// 	if !ok {
-		// 		// all jobs sent, tell the client we're done
-		// 		fmt.Fprintf(w, "event: done\ndata: bye\n\n")
-		// 		flusher.Flush()
-		// 		return
-		// 	}
-		//
-		// 	if first {
-		// 		first = false
-		// 		stopTTFI()
-		// 	}
-		//
-		// 	stopRender, _ := perf.StartTimer(ctx, slog.LevelDebug, "render")
-		// 	card, err := tmpl.Render(t, "card", NewDisplayItem(it))
-		// 	stopRender()
-		//
-		// 	if err != nil {
-		// 		fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", card)
-		// 		flusher.Flush()
-		//
-		// 		fmt.Fprint(w, "event: done\ndata: bye\n\n")
-		// 		flusher.Flush()
-		// 		return
-		// 	}
-		//
-		// 	fmt.Fprintf(
-		// 		w,
-		// 		"event: foundJobs\ndata: %s\n\n",
-		// 		strings.ReplaceAll(card, "\n", ""),
-		// 	)
-		// 	flusher.Flush()
-		//
-		// // client hung-up or timed-out
-		// case <-ctx.Done():
-		// 	return
-		// }
-		// }
 	}
 }

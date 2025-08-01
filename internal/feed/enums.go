@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"regexp"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 var ignoreNonLetters = regexp.MustCompile(`[^A-Za-z]+`)
@@ -25,7 +27,7 @@ const (
 var JOB_TYPES = []string{"fulltime", "parttime", "contract", "internship"}
 
 // ParseJobType normalizes s (drops non‑letters) and returns the matching JobType.
-func ParseJobType(s string) (JobType, error) {
+func ParseJobType(log *logrus.Entry, s string) (JobType, error) {
 	jobType := normalize(s)
 
 	switch jobType {
@@ -38,7 +40,10 @@ func ParseJobType(s string) (JobType, error) {
 	case "internship":
 		return Internship, nil
 	default:
-		return UnknownJobType, fmt.Errorf("Failed to parse (%s)", s)
+		log.WithFields(logrus.Fields{
+			"jobType": s,
+		}).Warn("parse")
+		return UnknownJobType, fmt.Errorf("Failed to parse jobType (%s)", s)
 	}
 }
 
@@ -55,7 +60,7 @@ const (
 var SENIORITIES = []string{"intern", "junior", "medior", "senior"}
 
 // ParseSeniority normalizes s (drops non‑letters) and returns the matching Seniority.
-func ParseSeniority(s string) (Seniority, error) {
+func ParseSeniority(log *logrus.Entry, s string) (Seniority, error) {
 	seniority := normalize(s)
 
 	switch seniority {
@@ -70,6 +75,9 @@ func ParseSeniority(s string) (Seniority, error) {
 	case "any":
 		return UnknownSeniority, nil
 	default:
-		return UnknownSeniority, fmt.Errorf("Failed to parse (%s)", s)
+		log.WithFields(logrus.Fields{
+			"seniority": s,
+		}).Warn("parse")
+		return UnknownSeniority, fmt.Errorf("Failed to parse seniority(%s)", s)
 	}
 }
