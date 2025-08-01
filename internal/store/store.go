@@ -364,6 +364,8 @@ WHERE
 				}
 			}
 
+			j.Age = time.Since(j.Date)
+
 			select {
 			case jobs <- j:
 			case <-ctx.Done():
