@@ -321,11 +321,7 @@ WHERE
 		defer rows.Close()
 
 		for rows.Next() {
-			var (
-				// FIXME: SqlStringNilwhatever
-				seniorityStr string
-				jobTypeStr   string
-			)
+			var seniorityStr, jobTypeStr, dateStr sql.NullString
 			var j feed.JobItem
 			if err := rows.Scan(
 				&j.Hash,
@@ -334,26 +330,38 @@ WHERE
 				&j.Link,
 				&j.Company,
 				&j.Location,
-				seniorityStr,
-				jobTypeStr,
-				&j.Date,
-				&j.InsertedAt,
+
+				&seniorityStr,
+				&jobTypeStr,
+				&dateStr,
+
 				&j.Score,
 			); err != nil {
 				errs <- err
 				return
 			}
 
-			j.Seniority, err = feed.ParseSeniority(log, seniorityStr)
-			if err != nil {
-				errs <- err
-				return
+			// NOTE: only parse when present; otherwise leave Unknown*
+			if seniorityStr.Valid && seniorityStr.String != "" {
+				if j.Seniority, err = feed.ParseSeniority(log, seniorityStr.String); err != nil {
+					j.Seniority = feed.UnknownSeniority
+				}
+			}
+			if jobTypeStr.Valid && jobTypeStr.String != "" {
+				if j.JobType, err = feed.ParseJobType(log, jobTypeStr.String); err != nil {
+					j.JobType = feed.UnknownJobType
+				}
 			}
 
-			j.JobType, err = feed.ParseJobType(log, jobTypeStr)
-			if err != nil {
-				errs <- err
-				return
+			// dates are stored as RFC3339; fall back to yyyy-mm-dd just in case
+			if dateStr.Valid && dateStr.String != "" {
+				if t, err := time.Parse(time.RFC3339, dateStr.String); err == nil {
+					j.Date = t
+				} else if t, err := time.Parse("2006-01-02", dateStr.String); err == nil {
+					j.Date = t
+				} else {
+					errs <- fmt.Errorf("invalid date in DB: %q: %w", dateStr.String, err)
+				}
 			}
 
 			select {
