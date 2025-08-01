@@ -15,6 +15,7 @@ func Register(log *logrus.Entry, tl *template.Template, st *store.JobStore) http
 		ctx, cancel := context.WithTimeout(req.Context(), 3*time.Second)
 		defer cancel()
 
+		// TODO: this seems redundant
 		jobs, err := st.GetJobs(log, ctx, req.URL.Query().Get("search"))
 		if err != nil {
 			http.Error(w, "timeout or db error", 500)
