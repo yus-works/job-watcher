@@ -1,21 +1,23 @@
 package jobs
 
+// TODO: separate job list vs job listing card as components
 import (
 	"fmt"
 	"html/template"
-	"log/slog"
 	"net/http"
 	"strings"
 
-	"github.com/yus-works/job-watcher/internal/fetch"
+	"github.com/sirupsen/logrus"
 	"github.com/yus-works/job-watcher/internal/perf"
-	"github.com/yus-works/job-watcher/internal/registry"
+	"github.com/yus-works/job-watcher/internal/store"
 	"github.com/yus-works/job-watcher/internal/tmpl"
 )
 
 func Register(
-	t *template.Template,
-	c *http.Client,
+	log *logrus.Entry,
+	tl *template.Template,
+	st *store.JobStore,
+	cl *http.Client,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
 		// feeds := []string{
@@ -37,19 +39,24 @@ func Register(
 
 		ctx := req.Context()
 
-		itemsCh := fetch.Stream(ctx, registry.FEEDS, c)
-
 		// timers — no time.Now(); they no-op when debug/info not enabled
-		stopTotal, _ := perf.StartTimer(ctx, slog.LevelDebug, "jobs_total")
-		defer stopTotal()
+		stopTotal, _ := perf.StartTimer(log, logrus.DebugLevel, "jobs_total")
+		defer stopTotal(map[string]any{
+			"test1": "idk",
+			"test2": "bruh",
+		})
 
-		stopTTFI, _ := perf.StartTimer(ctx, slog.LevelDebug, "ttfi")
+		stopTTFI, _ := perf.StartTimer(log, logrus.DebugLevel, "ttfi")
 		first := true
 
-		for {
+		jobsCh, errsCh := st.StreamJobs(log, ctx, "")
+
+		for jobsCh != nil || errsCh != nil {
 			select {
-			case it, ok := <-itemsCh:
+			case job, ok := <-jobsCh:
 				if !ok {
+					jobsCh = nil
+
 					// all jobs sent, tell the client we're done
 					fmt.Fprintf(w, "event: done\ndata: bye\n\n")
 					flusher.Flush()
@@ -58,12 +65,15 @@ func Register(
 
 				if first {
 					first = false
-					stopTTFI()
+					stopTTFI(map[string]any{
+						"test1": "idk",
+						"test2": "bruh",
+					})
 				}
 
-				stopRender, _ := perf.StartTimer(ctx, slog.LevelDebug, "render")
-				card, err := tmpl.Render(t, "card", NewDisplayItem(it))
-				stopRender()
+				stopRender, _ := perf.StartTimer(log, logrus.DebugLevel, "render")
+				card, err := tmpl.Render(log, ctx, tl, "card", NewDisplayItem(job))
+				stopRender(nil)
 
 				if err != nil {
 					fmt.Fprintf(w, "event: renderFailed\ndata: %s\n\n", card)
@@ -80,10 +90,15 @@ func Register(
 					strings.ReplaceAll(card, "\n", ""),
 				)
 				flusher.Flush()
+			case err, ok := <-errsCh:
+				if !ok {
+					errsCh = nil
+					continue
+				}
 
-			// client hung-up or timed-out
-			case <-ctx.Done():
-				return
+				log.WithFields(logrus.Fields{
+					"err": err,
+				}).Error("fetch jobs")
 			}
 		}
 	}

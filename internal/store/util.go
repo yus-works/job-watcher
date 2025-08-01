@@ -2,6 +2,8 @@ package store
 
 import (
 	"hash/fnv"
+	"math"
+	"regexp"
 	"strings"
 	"unicode"
 
@@ -9,7 +11,7 @@ import (
 	"golang.org/x/text/unicode/norm"
 )
 
-func Normalize(s string) string {
+func normalize(s string) string {
 	s = strings.TrimSpace(s)
 	s = cases.Fold().String(s)
 	t := norm.NFKD.String(s)
@@ -23,8 +25,17 @@ func Normalize(s string) string {
 	return strings.Join(strings.Fields(string(buf)), " ")
 }
 
-func HashNormalized64(s string) uint64 {
+func HashNormalized64(s string) int64 {
 	h := fnv.New64a()
-	h.Write([]byte(Normalize(s)))
-	return h.Sum64()
+	h.Write([]byte(normalize(s)))
+	return int64(h.Sum64() & math.MaxInt64) // zero out MSB
+}
+
+var nonAlnum = regexp.MustCompile(`[^a-z0-9]+`)
+
+func NormalizeTag(s string) string {
+	s = strings.ToLower(s)
+	s = norm.NFKD.String(s)
+	s = nonAlnum.ReplaceAllString(s, "-")
+	return strings.Trim(s, "-")
 }
