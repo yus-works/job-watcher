@@ -262,6 +262,80 @@ WHERE
 	return out, rows.Err()
 }
 
+func (s *JobStore) StreamJobs(ctx context.Context, filter string) (<-chan feed.JobItem, <-chan error) {
+	jobs := make(chan feed.JobItem)
+	errs := make(chan error, 1)
+
+	go func() {
+		defer close(jobs)
+		defer close(errs)
+
+		const q = `
+SELECT
+	hash, source, title, link, company, location, seniority, jobType, date, score
+FROM
+	jobs
+WHERE
+	title LIKE ? ORDER BY score DESC, inserted_at DESC;
+`
+		rows, err := s.db.QueryContext(ctx, q, "%"+filter+"%")
+		if err != nil {
+			errs <- err
+			return
+		}
+		defer rows.Close()
+
+		for rows.Next() {
+			var (
+				seniorityStr string
+				jobTypeStr   string
+			)
+			var j feed.JobItem
+			if err := rows.Scan(
+				&j.Hash,
+				&j.Source,
+				&j.Title,
+				&j.Link,
+				&j.Company,
+				&j.Location,
+				seniorityStr,
+				jobTypeStr,
+				&j.Date,
+				&j.InsertedAt,
+				&j.Score,
+			); err != nil {
+				errs <- err
+				return
+			}
+
+			j.Seniority, err = feed.ParseSeniority(seniorityStr)
+			if err != nil {
+				errs <- err
+				return
+			}
+
+			j.JobType, err = feed.ParseJobType(jobTypeStr)
+			if err != nil {
+				errs <- err
+				return
+			}
+
+			select {
+			case jobs <- j:
+			case <-ctx.Done():
+				errs <- ctx.Err()
+				return
+			}
+		}
+
+		if err := rows.Err(); err != nil {
+			errs <- err
+		}
+	}()
+
+	return jobs, errs
+}
+
 func (s *JobStore) WipeDB() error {
 	if err := s.db.Close(); err != nil {
 		return err
