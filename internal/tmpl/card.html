@@ -1,0 +1,22 @@
+{{ define "card" }}
+<div class="job-card">
+	<div class="container">
+		<div class="job-card-header">
+			<h2><a href="{{ .Link }}">{{ .Title }} | {{ .Company }}</a></h2>
+			<span class="source">{{ .Source }}</span>
+		</div>
+
+		<div class="posted">
+			<h2 class="age"> {{ .Age }} </h2>
+			<h2 class="date"> {{ .Date }} </h2>
+		</div>
+	</div>
+
+	<div class="tags">
+		{{ with .Location }}<span class="tag tag--location">{{ . }}</span>{{ end }}
+		{{ with .Seniority }}<span class="tag tag--level">{{ . }}</span>{{ end }}
+		{{ with .JobType }}<span class="tag tag--type">{{ . }}</span>{{ end }}
+		{{ range .Tags }}<span class="tag tag--extra">{{ . }}</span>{{ end }}
+	</div>
+</div>
+{{ end }}
