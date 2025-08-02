@@ -160,3 +160,60 @@ a:hover {
 	background: rgba(255, 255, 255, 0.1);
 	color: var(--text-color);
 }
+
+.job-card {
+	border: 1px solid var(--card-border);
+	border-left-width: 4px;
+	border-left-color: var(--card-border); /* explicit gray base */
+
+	transition:
+		background-color .18s ease,
+		transform .12s ease,
+		box-shadow 3.15s ease,
+		border-left-color .2s ease;
+	will-change: transform;
+
+	content-visibility: auto;
+	contain-intrinsic-size: 100px;
+}
+
+.job-card:hover {
+	transform: translateY(-4px);
+	/* fallback first, enhanced second */
+	border-left-color: var(--primary-color);
+	border-left-color: color-mix(in oklab, var(--primary-color) 85%, white 15%);
+}
+
+.job-card.reveal { animation: card-in .14s ease-out backwards; }
+@keyframes card-in {
+	from { opacity: 0; transform: translateY(44px); }
+	to   { opacity: 1; transform: translateY(0); }
+}
+
+.job-card .posted .age,
+.job-card .posted .date { font-variant-numeric: tabular-nums; }
+.job-card .posted .date { color: var(--muted-text-color); }
+
+.tag {
+	border: 1px solid rgba(255,255,255,.12);
+}
+.tag--location { border-color: rgba(3,218,198,.35); }
+.tag--level { border-color: rgba(187,134,252,.35); }
+.tag--type { border-color: rgba(187,134,252,.35); }
+
+/* sticky filters with light glass effect (optional) */
+.filters {
+	position: sticky; top: 0; z-index: 2;
+	backdrop-filter: blur(6px);
+	background: color-mix(in oklab, var(--bg-color) 85%, transparent);
+	border-bottom: 1px solid rgba(255,255,255,.06);
+	padding-block: .5rem;
+}
+
+/* better keyboard focus */
+a:focus-visible {
+	outline: 2px solid var(--primary-color);
+	outline-offset: 2px;
+	border-radius: 4px;
+	text-decoration: none;
+}
