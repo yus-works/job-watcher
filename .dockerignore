@@ -1,0 +1,6 @@
+.git
+tmp
+**/*.swp
+**/*.log
+node_modules
+dist
