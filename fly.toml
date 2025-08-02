@@ -19,6 +19,10 @@ primary_region = 'cdg'
   size = 'shared-cpu-1x'
   memory_mb = 256
 
+[env]
+  DB_PATH = "/data/job-watcher.db"
+  LOG_PATH = "/data/job-watcher.log"
+
 [mounts]
   source = "jobwatcher_data"
   destination = "/data"

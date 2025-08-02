@@ -5,6 +5,7 @@ import (
 	"html/template"
 	"net"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/sirupsen/logrus"
@@ -68,6 +69,8 @@ func registerHandlers(
 		})
 	}
 
+	refreshSecret := os.Getenv("REFRESH_TOKEN")
+
 	// FIXME: too much voodoo
 	m.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		home.Register(mkLogger(r), t, s)(w, r)
@@ -76,6 +79,6 @@ func registerHandlers(
 		jobs.Register(mkLogger(r), t, s, c)(w, r)
 	})
 	m.HandleFunc("/refresh", func(w http.ResponseWriter, r *http.Request) {
-		refresh.Register(mkLogger(r), s, c)(w, r)
+		refresh.Register(mkLogger(r), s, c, refreshSecret)(w, r)
 	})
 }
