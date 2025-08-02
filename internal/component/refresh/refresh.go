@@ -1,6 +1,7 @@
 package refresh
 
 // TODO: move refresh out of comp its not a component
+// TODO: make it so refresh can only be triggered once every 6 hours
 import (
 	"fmt"
 	"net/http"

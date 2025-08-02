@@ -14,7 +14,7 @@ import (
 )
 
 func main() {
-	logg, closer, err := logging.New(logrus.InfoLevel, "job-watcher.log")
+	logg, closer, err := logging.New(logrus.InfoLevel, "data/job-watcher.log")
 
 	if err != nil {
 		log.Fatalf("logger init: %v", err)
@@ -22,7 +22,7 @@ func main() {
 	defer closer.Close()
 
 	tl := template.Must(template.ParseGlob("internal/tmpl/*.html"))
-	st, err := store.NewJobStore("job-store.db")
+	st, err := store.NewJobStore("data/job-store.db")
 	if err != nil {
 		logg.WithError(err).Fatal("open db")
 	}

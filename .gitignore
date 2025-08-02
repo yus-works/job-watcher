@@ -3,3 +3,4 @@ tmp/
 *.db
 *.db*
 *.log
+data/
