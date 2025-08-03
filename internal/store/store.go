@@ -100,6 +100,17 @@ CREATE TABLE IF NOT EXISTS job_tags (
 	return err
 }
 
+func (s *JobStore) createMetaTable(ctx context.Context) error {
+	const q = `
+CREATE TABLE IF NOT EXISTS meta (
+	key        TEXT PRIMARY KEY,
+	value      TEXT NOT NULL,
+	updated_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ','now'))
+) STRICT;`
+	_, err := s.db.ExecContext(ctx, q)
+	return err
+}
+
 func (s *JobStore) CreateTables(ctx context.Context) error {
 	var err error
 
@@ -108,6 +119,9 @@ func (s *JobStore) CreateTables(ctx context.Context) error {
 	}
 	if err = s.createTagsTables(ctx); err != nil {
 		return fmt.Errorf("Failed to create Tags tables table: %w", err)
+	}
+	if err = s.createMetaTable(ctx); err != nil {
+		return fmt.Errorf("Failed to create meta table: %w", err)
 	}
 
 	return nil
