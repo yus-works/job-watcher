@@ -18,12 +18,12 @@ import (
 func main() {
 	dbPath := os.Getenv("DB_PATH")
 	if dbPath == "" {
-		dbPath = "/data/job-watcher.db"
+		dbPath = "data/job-watcher.db" // local
 	}
 
 	logPath := os.Getenv("LOG_PATH")
 	if logPath == "" {
-		logPath = "/data/job-watcher.log"
+		logPath = "data/job-watcher.log" // local
 	}
 
 	// ensure parents exist
