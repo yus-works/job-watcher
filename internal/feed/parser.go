@@ -60,9 +60,7 @@ func ParseJSON(log *logrus.Entry, curr Feed, objs []map[string]json.RawMessage) 
 		if jobTypeStr != "" {
 			jobType, err := ParseJobType(log, jobTypeStr)
 			if err != nil {
-				log.WithFields(logrus.Fields{
-					"err": err,
-				}).Warn("parse jobTypeStr")
+				log.WithError(err).Warn("parse jobTypeStr")
 			}
 
 			item.JobType = jobType
@@ -71,9 +69,7 @@ func ParseJSON(log *logrus.Entry, curr Feed, objs []map[string]json.RawMessage) 
 		if seniorityStr != "" {
 			seniority, err := ParseSeniority(log, seniorityStr)
 			if err != nil {
-				log.WithFields(logrus.Fields{
-					"err": err,
-				}).Warn("parse seniorityStr")
+				log.WithError(err).Warn("parse seniorityStr")
 			}
 
 			item.Seniority = seniority
@@ -155,9 +151,7 @@ func ParseRSS(log *logrus.Entry, curr Feed, body io.Reader) ([]JobItem, error) {
 			if jobTypeStr != "" {
 				jobType, err := ParseJobType(log, jobTypeStr)
 				if err != nil {
-					log.WithFields(logrus.Fields{
-						"err": err,
-					}).Warn("parse jobTypeStr")
+					log.WithError(err).Warn("parse jobTypeStr")
 				}
 
 				item.JobType = jobType

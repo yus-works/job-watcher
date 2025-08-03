@@ -39,7 +39,6 @@ func main() {
 	st, err := store.NewJobStore(dbPath)
 	if err != nil {
 		logg.WithError(err).Fatal("open db")
-		// TODO: replace all err only WithFields with WithError
 	}
 	defer st.Close()
 

@@ -70,9 +70,7 @@ func Register(
 			if err != nil {
 				msg := fmt.Sprintf("insert failed: %v", err)
 
-				log.WithFields(logrus.Fields{
-					"err": err,
-				}).Warn("insert item")
+				log.WithError(err).Warn("insert item")
 
 				w.WriteHeader(http.StatusInternalServerError)
 				fmt.Fprint(w, msg)

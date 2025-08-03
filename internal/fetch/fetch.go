@@ -113,8 +113,7 @@ func Stream(
 			if err != nil {
 				log.WithFields(logrus.Fields{
 					"url": feed.URL,
-					"err": err,
-				}).Warn("fetch items")
+				}).WithError(err).Warn("fetch items")
 				return
 			}
 

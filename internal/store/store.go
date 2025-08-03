@@ -212,9 +212,7 @@ VALUES
 
 	newRow, err2 := res.RowsAffected()
 	if err2 != nil {
-		log.WithFields(logrus.Fields{
-			"err": err2,
-		}).Warn("getting rows affected")
+		log.WithError(err2).Warn("getting rows affected")
 	} else if newRow == 0 {
 		log.WithFields(logrus.Fields{
 			"identifier": Identifier(j),

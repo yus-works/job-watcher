@@ -20,8 +20,7 @@ func Render(
 	if err != nil {
 		log.WithFields(logrus.Fields{
 			"name": name,
-			"err":  err,
-		}).Error(
+		}).WithError(err).Error(
 			"execute template",
 		)
 		return "Failed to render 'card'", err

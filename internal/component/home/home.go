@@ -14,8 +14,7 @@ func Register(log *logrus.Entry, tl *template.Template, st *store.JobStore) http
 		if err != nil {
 			log.WithFields(logrus.Fields{
 				"name": "home",
-				"err":  err,
-			}).Error("Failed to execute template")
+			}).WithError(err).Error("Failed to execute template")
 		}
 	}
 }

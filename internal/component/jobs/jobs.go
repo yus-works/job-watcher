@@ -95,9 +95,7 @@ func Register(
 					continue
 				}
 
-				log.WithFields(logrus.Fields{
-					"err": err,
-				}).Error("fetch jobs")
+				log.WithError(err).Error("fetch jobs")
 			}
 		}
 	}
