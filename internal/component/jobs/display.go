@@ -3,12 +3,23 @@ package jobs
 import (
 	"html"
 	"strings"
+	"unicode"
 
 	"github.com/yus-works/job-watcher/internal/feed"
 )
 
 func cleanText(s string) string {
-	return html.UnescapeString(strings.TrimSpace(s))
+	s = strings.TrimSpace(s)
+	// bounded multi-pass for double-encoded inputs like &amp;amp;
+	for range 3 {
+		u := html.UnescapeString(s)
+		if u == s {
+			break
+		}
+		s = u
+	}
+	s = strings.ReplaceAll(s, "\u00A0", " ")
+	return strings.TrimFunc(s, unicode.IsSpace)
 }
 
 type DisplayItem struct {
@@ -30,8 +41,6 @@ func NewDisplayItem(i feed.JobItem) DisplayItem {
 	}
 
 	di.Title = cleanText(di.Title)
-	di.Title = cleanText(di.Title)
-	di.Company = cleanText(di.Company)
 	di.Company = cleanText(di.Company)
 
 	return di
