@@ -10,6 +10,7 @@
 	--input-border: #333;
 	--card-bg: #1a1a1a;
 	--card-border: #2a2a2a;
+	--content-width: clamp(320px, 92vw, 800px);
 }
 
 * {
@@ -57,6 +58,25 @@ a:hover {
 .filters input:focus,
 .filters select:focus {
 	border-color: var(--primary-color);
+}
+
+.filters,
+#job-list,
+#jobs-failed {
+	width: var(--content-width);
+	margin-inline: auto;
+}
+
+#job-list > * {
+	width: 100%;
+}
+
+.job-card .container {
+	flex-wrap: wrap;
+	gap: .5rem;
+}
+.job-card .posted {
+	min-width: max-content;
 }
 
 @media (max-width: 600px) {
