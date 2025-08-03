@@ -53,9 +53,8 @@ func (m infostudMapper) Location(
 // that triggers the refresh routine or something
 var FEEDS = []feed.Feed{
 	{
-		// TODO: "https://remotive.com/api/remote-jobs?category=software-dev",
 		Name: "Remotive",
-		URL:  "http://localhost:8000/remotive.rss",
+		URL:  "https://remotive.com/api/remote-jobs?category=software-dev",
 		Mapper: feed.DefaultMapper{
 			TitleField:    "title",
 			LinkField:     "link",
@@ -67,8 +66,7 @@ var FEEDS = []feed.Feed{
 	},
 	{
 		Name: "RemoteOK",
-		// TODO: change to https://remoteok.com/api
-		URL: "http://localhost:8000/remoteok.json",
+		URL:  "https://remoteok.com/api",
 		Mapper: feed.DefaultMapper{
 			TitleField:    "position",
 			CompanyField:  "company",
@@ -93,8 +91,7 @@ var FEEDS = []feed.Feed{
 	},
 	{
 		Name: "Jobicy",
-		// TODO: url: https://jobicy.com/api/v2/remote-jobs
-		URL: "http://localhost:8000/jobicy.json",
+		URL:  "https://jobicy.com/api/v2/remote-jobs",
 		Mapper: feed.DefaultMapper{
 			TitleField:     "jobTitle",
 			CompanyField:   "companyName",
@@ -123,8 +120,7 @@ var FEEDS = []feed.Feed{
 	},
 	{
 		Name: "Himalayas",
-		// TODO: url: "https://himalayas.app/jobs/api"
-		URL: "http://localhost:8000/himalayas.json",
+		URL:  "https://himalayas.app/jobs/api",
 		Mapper: feed.DefaultMapper{
 			TitleField:     "title",
 			CompanyField:   "companyName",
@@ -155,8 +151,7 @@ var FEEDS = []feed.Feed{
 	},
 	{
 		Name: "WeWorkRemotely",
-		// TODO: url: "https://weworkremotely.com/categories/remote-programming-jobs.rss"
-		URL: "http://localhost:8000/remote-programming-jobs.rss",
+		URL:  "https://weworkremotely.com/categories/remote-programming-jobs.rss",
 		Mapper: weworkMapper{
 			DefaultMapper: feed.DefaultMapper{
 				// both will be post processed by custom Title()
@@ -172,8 +167,7 @@ var FEEDS = []feed.Feed{
 	},
 	{
 		Name: "Infostud",
-		// TODO: url: "http://rss.infostud.com/poslovi/"
-		URL: "http://localhost:8000/infostud.rss",
+		URL:  "http://rss.infostud.com/poslovi/",
 		Mapper: infostudMapper{
 			DefaultMapper: feed.DefaultMapper{
 				TitleField:    "title",
