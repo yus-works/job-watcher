@@ -39,13 +39,13 @@ func Register(
 		ctx := req.Context()
 
 		// timers — no time.Now(); they no-op when debug/info not enabled
-		stopTotal, _ := perf.StartTimer(log, logrus.DebugLevel, "jobs_total")
+		stopTotal := perf.StartTimer(log, logrus.DebugLevel, "jobs_total")
 		defer stopTotal(map[string]any{
 			"test1": "idk",
 			"test2": "bruh",
 		})
 
-		stopTTFI, _ := perf.StartTimer(log, logrus.DebugLevel, "ttfi")
+		stopTTFI := perf.StartTimer(log, logrus.DebugLevel, "ttfi")
 		first := true
 
 		jobsCh, errsCh := st.StreamJobs(log, ctx, "")
@@ -70,7 +70,7 @@ func Register(
 					})
 				}
 
-				stopRender, _ := perf.StartTimer(log, logrus.DebugLevel, "render")
+				stopRender := perf.StartTimer(log, logrus.DebugLevel, "render")
 				card, err := tmpl.Render(log, ctx, tl, "card", NewDisplayItem(job))
 				stopRender(nil)
 

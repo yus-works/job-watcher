@@ -10,23 +10,27 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// TODO: probably better using ...map isntead of passing nil
 func StartTimer(
 	log *logrus.Entry,
 	level logrus.Level,
 	name string,
-) (func(extra map[string]any), bool) {
+) func(extra logrus.Fields) {
 	if log == nil || !log.Logger.IsLevelEnabled(level) {
-		return func(map[string]any) {}, false
+		return func(logrus.Fields) {}
 	}
+
 	start := time.Now()
-	return func(extra map[string]any) {
-		fields := logrus.Fields{"dur": time.Since(start)}
-		if extra != nil {
-			maps.Copy(fields, extra)
-		}
+
+	return func(extra logrus.Fields) {
+		fields := make(logrus.Fields, len(extra)+2)
+		maps.Copy(fields, extra)
+
+		d := time.Since(start)
+		fields["dur_ms"] = d.Milliseconds()
+		fields["dur"] = d.String()
+
 		log.WithFields(fields).Log(level, name)
-	}, true
+	}
 }
 
 func NetTrace(

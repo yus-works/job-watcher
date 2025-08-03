@@ -60,8 +60,8 @@ func Register(
 
 		itemsCh := fetch.Stream(log, ctx, registry.FEEDS, cl)
 
-		stopTotal, _ := perf.StartTimer(log, logrus.DebugLevel, "jobs_total")
-		defer stopTotal(nil) // TODO: this might break idk
+		stopTotal := perf.StartTimer(log, logrus.DebugLevel, "jobs_total")
+		defer stopTotal(nil)
 
 		insertedCount := 0
 		skippedCount := 0
