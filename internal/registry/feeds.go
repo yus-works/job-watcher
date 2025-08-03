@@ -91,7 +91,7 @@ var FEEDS = []feed.Feed{
 	},
 	{
 		Name: "Jobicy",
-		URL:  "https://jobicy.com/api/v2/remote-jobs",
+		URL:  "https://jobicy.com/api/v2/remote-jobs?count=100&industry=engineering",
 		Mapper: feed.DefaultMapper{
 			TitleField:     "jobTitle",
 			CompanyField:   "companyName",
