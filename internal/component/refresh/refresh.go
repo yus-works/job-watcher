@@ -45,8 +45,8 @@ func Register(
 			return
 		}
 
-		// naive cool-down: block if run < 4h ago
-		if !lastRun.IsZero() && time.Since(lastRun) < 4*time.Hour {
+		// naive cool-down: block if run < 6h ago
+		if !lastRun.IsZero() && time.Since(lastRun) < 6*time.Hour {
 			w.Header().Set("Content-Type", "text/plain")
 			w.WriteHeader(http.StatusTooManyRequests)
 			fmt.Fprintf(w, "too frequent; try again in %s\n", (6*time.Hour)-time.Since(lastRun))
