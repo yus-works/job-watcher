@@ -16,7 +16,45 @@
 		<option value="oldest">Oldest first</option>
 		<option value="score">Highest score</option>
 	</select>
+
+	<input type="hidden" id="last-refresh" data-iso="{{ .LastRefreshISO }}"/>
+
+	<div class="filters__spacer"></div>
+	<div class="clock">
+		Last refresh <span id="last-refresh-ago">—</span> ago
+	</div>
 </div>
+
+<script>
+(function () {
+	const el = document.getElementById('last-refresh');
+	const out = document.getElementById('last-refresh-ago');
+	if (!el || !out) return;
+
+	const iso = el.dataset.iso;
+	if (!iso) { out.textContent = "never"; return; }
+
+	const last = new Date(iso); // UTC -> local automatically for diff
+
+	function fmt(deltaMs) {
+		if (deltaMs < 0) deltaMs = 0;
+		const s = Math.floor(deltaMs / 1000);
+		const m = Math.floor(s / 60);
+		const h = Math.floor(m / 60);
+		const d = Math.floor(h / 24);
+		if (d > 0)   return `${d}d ${h%24}h`;
+		if (h > 0)   return `${h}h ${m%60}m`;
+		if (m > 0)   return `${m}m ${s%60}s`;
+		return `${s}s`;
+	}
+
+	function tick() {
+		out.textContent = fmt(Date.now() - last.getTime());
+	}
+	tick();
+	setInterval(tick, 1000);
+})();
+</script>
 
 {{ template "jobs" . }}
 
