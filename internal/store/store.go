@@ -386,19 +386,7 @@ WHERE
 
 			j.Seniority = tolerantParse(log, seniorityStr, feed.ParseSeniority)
 			j.JobType = tolerantParse(log, jobTypeStr, feed.ParseJobType)
-
-			// dates are stored as RFC3339; fall back to yyyy-mm-dd just in case
-			if dateStr.Valid && dateStr.String != "" {
-				if t, err := time.Parse(time.RFC3339, dateStr.String); err == nil {
-					j.Date = t
-				} else if t, err := time.Parse("2006-01-02", dateStr.String); err == nil {
-					j.Date = t
-				} else {
-					errs <- fmt.Errorf("invalid date in DB: %q: %w", dateStr.String, err)
-					return
-				}
-			}
-
+			j.Date = parseDate(log, dateStr)
 			j.Age = time.Since(j.Date)
 
 			select {

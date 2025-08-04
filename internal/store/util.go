@@ -2,10 +2,12 @@ package store
 
 import (
 	"database/sql"
+	"fmt"
 	"hash/fnv"
 	"math"
 	"regexp"
 	"strings"
+	"time"
 	"unicode"
 
 	"github.com/sirupsen/logrus"
@@ -59,4 +61,25 @@ func tolerantParse[T feed.Seniority | feed.JobType](
 	}
 
 	return enum
+}
+
+func parseDate(
+	log *logrus.Entry,
+	dateStr sql.NullString,
+) time.Time {
+	if !dateStr.Valid && dateStr.String == "" {
+		err := fmt.Errorf("invalid or missing date in DB: %q", dateStr.String)
+		log.WithError(err).Error("parse date")
+		return time.Time{}
+	}
+
+	if t, err := time.Parse(time.RFC3339, dateStr.String); err == nil {
+		return t
+	} else if t, err := time.Parse("2006-01-02", dateStr.String); err == nil {
+		return t
+	} else {
+		err = fmt.Errorf("invalid date in DB: %q: %w", dateStr.String, err)
+		log.WithError(err).Error("parse date")
+		return time.Time{}
+	}
 }
