@@ -1,17 +1,22 @@
 {{ define "content" }}
-<div class="filters">
+<div
+	id="filters"
+	class="filters"
+	hx-get="/jobs/reset"
+	hx-target="#job-list"
+	hx-swap="outerHTML"
+	hx-include="[name='search'],[name='sort']"
+	hx-trigger="
+		keyup changed from:input[name='search'],
+		change from:select[name='sort']
+">
 	<input
 		type="text"
 		name="search"
-		placeholder="Filter jobs…"
-		hx-get="/jobs"
-		hx-target="#job-list"
-		hx-trigger="keyup changed delay:300ms"/>
-	<select
-		name="sort"
-		hx-get="/jobs"
-		hx-target="#job-list"
-		hx-trigger="change">
+		placeholder="Filter jobs..."
+	/>
+
+	<select name="sort">
 		<option value="newest">Newest first</option>
 		<option value="oldest">Oldest first</option>
 		<option value="score">Highest score</option>

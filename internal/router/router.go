@@ -2,7 +2,6 @@ package router
 
 import (
 	"context"
-	"fmt"
 	"html/template"
 	"net"
 	"net/http"
@@ -77,10 +76,10 @@ func registerHandlers(
 		home.Register(mkLogger(r), t, s)(w, r)
 	})
 	m.HandleFunc("/jobs/stream", func(w http.ResponseWriter, r *http.Request) {
-		jobs.Register(mkLogger(r), t, s, c)(w, r)
+		jobs.StreamJobs(mkLogger(r), t, s, c)(w, r)
 	})
 	m.HandleFunc("/jobs/reset", func(w http.ResponseWriter, r *http.Request) {
-		jobs.Register(mkLogger(r), t, s, c)(w, r)
+		jobs.ResetJobs(mkLogger(r), t, s, c)(w, r)
 	})
 	m.HandleFunc("/refresh", func(w http.ResponseWriter, r *http.Request) {
 		refresh.Register(mkLogger(r), s, c, refreshSecret)(w, r)

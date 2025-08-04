@@ -12,7 +12,7 @@ import (
 	"github.com/yus-works/job-watcher/internal/tmpl"
 )
 
-func Register(
+func StreamJobs(
 	log *logrus.Entry,
 	tl *template.Template,
 	st *store.JobStore,
@@ -41,6 +41,7 @@ func Register(
 		stopTTFI := perf.StartTimer(log, logrus.DebugLevel, "ttfi")
 		first := true
 
+		// TODO: use sort
 		q := req.URL.Query().Get("search")
 
 		jobsCh, errsCh := st.StreamJobs(log, ctx, q)
@@ -92,6 +93,30 @@ func Register(
 
 				log.WithError(err).Error("fetch jobs")
 			}
+		}
+	}
+}
+
+func ResetJobs(
+	log *logrus.Entry,
+	tl *template.Template,
+	st *store.JobStore,
+	cl *http.Client,
+) http.HandlerFunc {
+	return func(w http.ResponseWriter, req *http.Request) {
+		data := struct {
+			SSEURL string
+		}{
+			SSEURL: "/jobs/stream?" +
+				"search=" + req.URL.Query().Get("search") +
+				"&" +
+				"sort=" + req.URL.Query().Get("sort"),
+		}
+
+		if err := tl.ExecuteTemplate(w, "jobs", data); err != nil {
+			log.WithFields(logrus.Fields{
+				"name": "jobs",
+			}).WithError(err).Error("Failed to execute template")
 		}
 	}
 }

@@ -243,3 +243,35 @@ a:focus-visible {
 	border-radius: 4px;
 	text-decoration: none;
 }
+
+/* 1) Keep the row on one line */
+.job-card .container {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: .5rem;
+	flex-wrap: nowrap;      /* <-- important (override earlier wrap) */
+}
+
+/* 2) Left column can shrink & wrap its text */
+.job-card-header {
+	flex: 1 1 auto;         /* take remaining space */
+	min-width: 0;           /* <-- crucial so text can wrap inside flex item */
+}
+
+/* 3) Right column keeps its width and stays pinned to the right */
+.job-card .posted {
+	flex: 0 0 auto;
+	min-width: max-content; /* you already had this — good */
+	text-align: right;
+}
+
+/* Make the actual title wrap (including very long words/URLs) */
+.job-card-header h2,
+.job-card-header h2 a {
+	white-space: normal;              /* ensure wrapping is allowed */
+	overflow-wrap: anywhere;          /* break long tokens if needed */
+	/* Optional fallbacks for older browsers: */
+	overflow-wrap: break-word;
+	word-break: break-word;
+}

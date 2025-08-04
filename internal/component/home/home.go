@@ -14,6 +14,7 @@ func Register(log *logrus.Entry, tl *template.Template, st *store.JobStore) http
 		last, _ := st.LastRefresh(req.Context())
 		data := struct {
 			LastRefreshISO string
+			SSEURL         string
 		}{
 			LastRefreshISO: func() string {
 				if last.IsZero() {
@@ -21,6 +22,7 @@ func Register(log *logrus.Entry, tl *template.Template, st *store.JobStore) http
 				}
 				return last.UTC().Format(time.RFC3339Nano)
 			}(),
+			SSEURL: "/jobs/stream",
 		}
 
 		if err := tl.ExecuteTemplate(w, "home", data); err != nil {

@@ -2,8 +2,8 @@
 <div
 	id="sse"
 	hx-ext="sse"
-	sse-connect="/jobs/stream"
 	sse-close="done"
+	sse-connect="{{ .SSEURL }}"
 >
 	<ul id="job-list"
 		hx-swap="afterbegin"
