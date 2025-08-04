@@ -384,16 +384,8 @@ WHERE
 				return
 			}
 
-			if seniorityStr.Valid && seniorityStr.String != "" {
-				if j.Seniority, err = feed.ParseSeniority(log, seniorityStr.String); err != nil {
-					j.Seniority = feed.UnknownSeniority
-				}
-			}
-			if jobTypeStr.Valid && jobTypeStr.String != "" {
-				if j.JobType, err = feed.ParseJobType(log, jobTypeStr.String); err != nil {
-					j.JobType = feed.UnknownJobType
-				}
-			}
+			j.Seniority = tolerantParse(log, seniorityStr, feed.ParseSeniority)
+			j.JobType = tolerantParse(log, jobTypeStr, feed.ParseJobType)
 
 			// dates are stored as RFC3339; fall back to yyyy-mm-dd just in case
 			if dateStr.Valid && dateStr.String != "" {

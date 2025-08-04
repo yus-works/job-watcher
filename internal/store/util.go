@@ -1,12 +1,15 @@
 package store
 
 import (
+	"database/sql"
 	"hash/fnv"
 	"math"
 	"regexp"
 	"strings"
 	"unicode"
 
+	"github.com/sirupsen/logrus"
+	"github.com/yus-works/job-watcher/internal/feed"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/unicode/norm"
 )
@@ -38,4 +41,22 @@ func NormalizeTag(s string) string {
 	s = norm.NFKD.String(s)
 	s = nonAlnum.ReplaceAllString(s, "-")
 	return strings.Trim(s, "-")
+}
+
+func tolerantParse[T feed.Seniority | feed.JobType](
+	log *logrus.Entry,
+	s sql.NullString,
+	parser func(log *logrus.Entry, s string) (T, error),
+) T {
+	var enum T
+	var err error
+
+	if s.Valid && s.String != "" {
+		enum, err = parser(log, s.String)
+		if err != nil {
+			log.WithError(err).Warn("parse")
+		}
+	}
+
+	return enum
 }
