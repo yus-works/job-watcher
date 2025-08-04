@@ -19,13 +19,6 @@ func Register(
 	cl *http.Client,
 ) http.HandlerFunc {
 	return func(w http.ResponseWriter, req *http.Request) {
-		// feeds := []string{
-		// 	"https://weworkremotely.com/categories/remote-programming-jobs.rss",
-		// 	"http://rss.infostud.com/poslovi/",
-		// 	"https://profession.hu/allasok?rss",
-		// 	"https://mernokallasok.hu/rss_friss.xml",
-		// }
-
 		w.Header().Set("Content-Type", "text/event-stream")
 		w.Header().Set("Cache-Control", "no-cache")
 		w.Header().Set("Connection", "keep-alive")
@@ -48,7 +41,9 @@ func Register(
 		stopTTFI := perf.StartTimer(log, logrus.DebugLevel, "ttfi")
 		first := true
 
-		jobsCh, errsCh := st.StreamJobs(log, ctx, "")
+		q := req.URL.Query().Get("search")
+
+		jobsCh, errsCh := st.StreamJobs(log, ctx, q)
 
 		for jobsCh != nil || errsCh != nil {
 			select {
