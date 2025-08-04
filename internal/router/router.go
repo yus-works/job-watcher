@@ -79,12 +79,10 @@ func registerHandlers(
 	m.HandleFunc("/jobs/stream", func(w http.ResponseWriter, r *http.Request) {
 		jobs.Register(mkLogger(r), t, s, c)(w, r)
 	})
+	m.HandleFunc("/jobs/reset", func(w http.ResponseWriter, r *http.Request) {
+		jobs.Register(mkLogger(r), t, s, c)(w, r)
+	})
 	m.HandleFunc("/refresh", func(w http.ResponseWriter, r *http.Request) {
 		refresh.Register(mkLogger(r), s, c, refreshSecret)(w, r)
-	})
-	// TODO: there has to be a better way to do this
-	m.HandleFunc("/none", func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		fmt.Fprint(w, "")
 	})
 }
