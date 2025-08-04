@@ -83,3 +83,12 @@ func parseDate(
 		return time.Time{}
 	}
 }
+
+const SELECT_QUERY = `
+SELECT
+	hash, source, title, link, company, location, seniority, jobType, date, score
+FROM
+	jobs
+WHERE
+	title LIKE ? ORDER BY score DESC, inserted_at DESC;
+`

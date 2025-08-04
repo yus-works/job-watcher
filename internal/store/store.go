@@ -348,15 +348,7 @@ func (s *JobStore) StreamJobs(
 		defer close(jobs)
 		defer close(errs)
 
-		const q = `
-SELECT
-	hash, source, title, link, company, location, seniority, jobType, date, score
-FROM
-	jobs
-WHERE
-	title LIKE ? ORDER BY score DESC, inserted_at DESC;
-`
-		rows, err := s.db.QueryContext(ctx, q, "%"+filter+"%")
+		rows, err := s.db.QueryContext(ctx, SELECT_QUERY, "%"+filter+"%")
 		if err != nil {
 			errs <- err
 			return
