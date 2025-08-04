@@ -111,6 +111,34 @@ CREATE TABLE IF NOT EXISTS meta (
 	return err
 }
 
+func (s *JobStore) createIndexes(ctx context.Context) error {
+	const q = `
+-- sort helpers
+CREATE INDEX IF NOT EXISTS
+	jobs_order_score_inserted
+ON
+	jobs(score DESC, inserted_at DESC);
+
+-- keep if you ever sort by inserted_at first
+CREATE INDEX IF NOT EXISTS
+	jobs_order_inserted_score
+ON
+	jobs(inserted_at DESC, score DESC);
+
+-- coarse text columns (useful for prefix LIKE 'foo%' or equality;
+-- won't help for '%foo%' but harmless to have)
+CREATE INDEX IF NOT EXISTS jobs_title_idx    ON jobs(title);
+CREATE INDEX IF NOT EXISTS jobs_company_idx  ON jobs(company);
+CREATE INDEX IF NOT EXISTS jobs_location_idx ON jobs(location);
+
+-- tag lookups: you already have UNIQUE(tags.name) via the UNIQUE constraint
+-- The PK on (job_hash, tag_id) exists already; add the reverse for tag-first scans:
+CREATE INDEX IF NOT EXISTS job_tags_tag_idx ON job_tags(tag_id, job_hash);
+`
+	_, err := s.db.ExecContext(ctx, q)
+	return err
+}
+
 func (s *JobStore) CreateTables(ctx context.Context) error {
 	var err error
 
@@ -122,6 +150,9 @@ func (s *JobStore) CreateTables(ctx context.Context) error {
 	}
 	if err = s.createMetaTable(ctx); err != nil {
 		return fmt.Errorf("Failed to create meta table: %w", err)
+	}
+	if err := s.createIndexes(ctx); err != nil {
+		return fmt.Errorf("Failed to create indexes: %w", err)
 	}
 
 	return nil
@@ -353,7 +384,6 @@ WHERE
 				return
 			}
 
-			// NOTE: only parse when present; otherwise leave Unknown*
 			if seniorityStr.Valid && seniorityStr.String != "" {
 				if j.Seniority, err = feed.ParseSeniority(log, seniorityStr.String); err != nil {
 					j.Seniority = feed.UnknownSeniority
@@ -373,6 +403,7 @@ WHERE
 					j.Date = t
 				} else {
 					errs <- fmt.Errorf("invalid date in DB: %q: %w", dateStr.String, err)
+					return
 				}
 			}
 
