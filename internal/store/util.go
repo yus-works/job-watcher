@@ -92,3 +92,36 @@ FROM
 WHERE
 	title LIKE ? ORDER BY score DESC, inserted_at DESC;
 `
+
+func scanAndParse(
+	log *logrus.Entry,
+	rows *sql.Rows,
+) (feed.JobItem, error) {
+	var seniorityStr, jobTypeStr, dateStr sql.NullString
+	var j feed.JobItem
+	if err := rows.Scan(
+		&j.Hash,
+		&j.Source,
+		&j.Title,
+		&j.Link,
+		&j.Company,
+		&j.Location,
+
+		&seniorityStr,
+		&jobTypeStr,
+		&dateStr,
+
+		&j.Score,
+	); err != nil {
+		err = fmt.Errorf("Failed to scan: %w", err)
+		log.WithError(err).Error("scan item")
+		return feed.JobItem{}, err
+	}
+
+	j.Seniority = tolerantParse(log, seniorityStr, feed.ParseSeniority)
+	j.JobType = tolerantParse(log, jobTypeStr, feed.ParseJobType)
+	j.Date = parseDate(log, dateStr)
+	j.Age = time.Since(j.Date)
+
+	return j, nil
+}

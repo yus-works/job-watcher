@@ -272,15 +272,7 @@ func (s *JobStore) GetJobs(
 	ctx context.Context,
 	filter string,
 ) ([]feed.JobItem, error) {
-	const q = `
-SELECT
-	hash, source, title, link, company, location, seniority, jobType, date, score
-FROM
-	jobs
-WHERE
-	title LIKE ? ORDER BY score DESC, inserted_at DESC;
-`
-	rows, err := s.db.QueryContext(ctx, q, "%"+filter+"%")
+	rows, err := s.db.QueryContext(ctx, SELECT_QUERY, "%"+filter+"%")
 	if err != nil {
 		return nil, err
 	}
@@ -288,47 +280,9 @@ WHERE
 
 	var out []feed.JobItem
 	for rows.Next() {
-		var seniorityStr, jobTypeStr, dateStr sql.NullString
-
-		var j feed.JobItem
-		if err := rows.Scan(
-			&j.Hash,
-			&j.Source,
-			&j.Title,
-			&j.Link,
-			&j.Company,
-			&j.Location,
-
-			&seniorityStr,
-			&jobTypeStr,
-			&dateStr,
-
-			&j.Score,
-		); err != nil {
-			return nil, err
-		}
-
-		// NOTE: only parse when present; otherwise leave Unknown*
-		if seniorityStr.Valid && seniorityStr.String != "" {
-			if j.Seniority, err = feed.ParseSeniority(log, seniorityStr.String); err != nil {
-				j.Seniority = feed.UnknownSeniority
-			}
-		}
-		if jobTypeStr.Valid && jobTypeStr.String != "" {
-			if j.JobType, err = feed.ParseJobType(log, jobTypeStr.String); err != nil {
-				j.JobType = feed.UnknownJobType
-			}
-		}
-
-		// dates are stored as RFC3339; fall back to yyyy-mm-dd just in case
-		if dateStr.Valid && dateStr.String != "" {
-			if t, err := time.Parse(time.RFC3339, dateStr.String); err == nil {
-				j.Date = t
-			} else if t, err := time.Parse("2006-01-02", dateStr.String); err == nil {
-				j.Date = t
-			} else {
-				return nil, fmt.Errorf("invalid date in DB: %q: %w", dateStr.String, err)
-			}
+		j, err := scanAndParse(log, rows)
+		if err != nil {
+			return nil, fmt.Errorf("Failed to scan: %w", err)
 		}
 
 		out = append(out, j)
@@ -356,30 +310,10 @@ func (s *JobStore) StreamJobs(
 		defer rows.Close()
 
 		for rows.Next() {
-			var seniorityStr, jobTypeStr, dateStr sql.NullString
-			var j feed.JobItem
-			if err := rows.Scan(
-				&j.Hash,
-				&j.Source,
-				&j.Title,
-				&j.Link,
-				&j.Company,
-				&j.Location,
-
-				&seniorityStr,
-				&jobTypeStr,
-				&dateStr,
-
-				&j.Score,
-			); err != nil {
+			j, err := scanAndParse(log, rows)
+			if err != nil {
 				errs <- err
-				return
 			}
-
-			j.Seniority = tolerantParse(log, seniorityStr, feed.ParseSeniority)
-			j.JobType = tolerantParse(log, jobTypeStr, feed.ParseJobType)
-			j.Date = parseDate(log, dateStr)
-			j.Age = time.Since(j.Date)
 
 			select {
 			case jobs <- j:
