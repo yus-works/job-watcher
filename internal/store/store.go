@@ -271,8 +271,15 @@ func (s *JobStore) GetJobs(
 	log *logrus.Entry,
 	ctx context.Context,
 	filter string,
+	sort string,
 ) ([]feed.JobItem, error) {
-	rows, err := s.db.QueryContext(ctx, SELECT_QUERY, "%"+filter+"%")
+	q, err := buildSelectQuery(sort)
+	if err != nil {
+		log.WithError(err).Error("parsing sort dir")
+		return nil, err
+	}
+
+	rows, err := s.db.QueryContext(ctx, q, "%"+filter+"%")
 	if err != nil {
 		return nil, err
 	}
@@ -294,6 +301,7 @@ func (s *JobStore) StreamJobs(
 	log *logrus.Entry,
 	ctx context.Context,
 	filter string,
+	sort string,
 ) (<-chan feed.JobItem, <-chan error) {
 	jobs := make(chan feed.JobItem)
 	errs := make(chan error, 1)
@@ -302,7 +310,14 @@ func (s *JobStore) StreamJobs(
 		defer close(jobs)
 		defer close(errs)
 
-		rows, err := s.db.QueryContext(ctx, SELECT_QUERY, "%"+filter+"%")
+		q, err := buildSelectQuery(sort)
+		if err != nil {
+			log.WithError(err).Error("parsing sort dir")
+			errs <- err
+			return
+		}
+
+		rows, err := s.db.QueryContext(ctx, q, "%"+filter+"%")
 		if err != nil {
 			errs <- err
 			return

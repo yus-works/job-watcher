@@ -41,10 +41,10 @@ func StreamJobs(
 		stopTTFI := perf.StartTimer(log, logrus.DebugLevel, "ttfi")
 		first := true
 
-		// TODO: use sort
-		q := req.URL.Query().Get("search")
+		filter := req.URL.Query().Get("search")
+		sort := req.URL.Query().Get("sort")
 
-		jobsCh, errsCh := st.StreamJobs(log, ctx, q)
+		jobsCh, errsCh := st.StreamJobs(log, ctx, filter, sort)
 
 		for jobsCh != nil || errsCh != nil {
 			select {

@@ -84,14 +84,40 @@ func parseDate(
 	}
 }
 
-const SELECT_QUERY = `
+func buildSelectQuery(sort string) (string, error) {
+	parts := strings.Split(strings.ToLower(sort), "-")
+	col := "date"
+	dir := "DESC"
+
+	if len(parts) == 2 {
+		switch parts[0] {
+		case "date", "score":
+			col = parts[0]
+		}
+
+		switch parts[1] {
+		case "asc":
+			dir = "ASC"
+		case "desc":
+			dir = "DESC"
+		}
+	}
+
+	if col != "date" && col != "score" {
+		col = "date"
+	}
+	if dir != "ASC" && dir != "DESC" {
+		dir = "DESC"
+	}
+
+	return fmt.Sprintf(`
 SELECT
-	hash, source, title, link, company, location, seniority, jobType, date, score
+  hash, source, title, link, company, location, seniority, jobType, date, score
 FROM
 	jobs
-WHERE
-	title LIKE ? ORDER BY score DESC, inserted_at DESC;
-`
+WHERE title LIKE ?
+ORDER BY %s %s, inserted_at DESC;`, col, dir), nil
+}
 
 func scanAndParse(
 	log *logrus.Entry,
