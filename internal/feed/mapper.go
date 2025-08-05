@@ -8,6 +8,7 @@ type FieldExtractor func(obj map[string]json.RawMessage, keys ...string) string
 
 type jObj = map[string]json.RawMessage
 
+// TODO: is this redundant
 type Mapper interface {
 	Title(decode func(val, field string) string) string
 	Company(decode func(val, field string) string) string

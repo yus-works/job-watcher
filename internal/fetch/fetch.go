@@ -31,6 +31,12 @@ func getItems(
 
 	defer body.Close()
 
+	if feed.Parse == nil {
+		err := fmt.Errorf("Parser not selected")
+		log.WithError(err).Error("getting items")
+		return nil, err
+	}
+
 	items, err := feed.Parse(log, feed, body)
 	if err != nil {
 		log.WithFields(logrus.Fields{

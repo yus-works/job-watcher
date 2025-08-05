@@ -4,50 +4,13 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/yus-works/job-watcher/internal/feed"
 )
 
+// TODO: is this redundant
 var _ feed.Mapper = feed.DefaultMapper{}
-
-type weworkMapper struct {
-	feed.DefaultMapper
-}
-
-func (m weworkMapper) Title(
-	decode func(val, field string) string,
-) string {
-	s := decode(m.TitleField, "title")
-	return strings.Split(s, ": ")[1]
-}
-
-func (m weworkMapper) Company(
-	decode func(val, field string) string,
-) string {
-	s := decode(m.TitleField, "title")
-	return strings.Split(s, ": ")[0]
-}
-
-type infostudMapper struct {
-	feed.DefaultMapper
-}
-
-func (m infostudMapper) Company(
-	decode func(val, field string) string,
-) string {
-	s := decode(m.DescriptionField, "title")
-	return strings.Split(s, " - ")[0]
-}
-
-func (m infostudMapper) Location(
-	decode func(val, field string) string,
-) string {
-	s := decode(m.DescriptionField, "title")
-	ssplit := strings.Split(s, " - ")
-	return ssplit[len(ssplit)-1]
-}
 
 // TODO: add refreshPeriod field to each feed
 // that triggers the refresh routine or something
@@ -175,6 +138,19 @@ var FEEDS = []feed.Feed{
 				CompanyField:  "description",
 				LocationField: "description",
 				DateField:     "pubDate",
+			},
+		},
+		Parse: feed.ParseRSS,
+	},
+	{
+		Name: "Golangprojects",
+		URL:  "https://www.golangprojects.com/rss.xml",
+		Mapper: golangprojectsMapper{
+			DefaultMapper: feed.DefaultMapper{
+				TitleField:    "title",
+				LinkField:     "link",
+				CompanyField:  "title",
+				LocationField: "description",
 			},
 		},
 		Parse: feed.ParseRSS,
