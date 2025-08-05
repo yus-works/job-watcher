@@ -11,14 +11,14 @@ type weworkMapper struct {
 }
 
 func (m weworkMapper) Title(
-	decode func(val, field string) string,
+	decode func(selector, field string) string,
 ) string {
 	s := decode(m.TitleField, "title")
 	return strings.Split(s, ": ")[1]
 }
 
 func (m weworkMapper) Company(
-	decode func(val, field string) string,
+	decode func(selector, field string) string,
 ) string {
 	s := decode(m.TitleField, "title")
 	return strings.Split(s, ": ")[0]
@@ -29,14 +29,14 @@ type infostudMapper struct {
 }
 
 func (m infostudMapper) Company(
-	decode func(val, field string) string,
+	decode func(selector, field string) string,
 ) string {
 	s := decode(m.DescriptionField, "title")
 	return strings.Split(s, " - ")[0]
 }
 
 func (m infostudMapper) Location(
-	decode func(val, field string) string,
+	decode func(selector, field string) string,
 ) string {
 	s := decode(m.DescriptionField, "title")
 	ssplit := strings.Split(s, " - ")
@@ -48,23 +48,30 @@ type golangprojectsMapper struct {
 }
 
 func (m golangprojectsMapper) Title(
-	decode func(val, field string) string,
+	decode func(selector, field string) string,
 ) string {
-	s := decode(m.TitleField, "isthisignoredlmao?")
-	return strings.Split(s, " - ")[0]
+	var s string
+	s = decode(m.TitleField, "title")
+	s = strings.Split(s, "@")[0]
+	return strings.TrimSpace(s)
 }
 
 func (m golangprojectsMapper) Company(
-	decode func(val, field string) string,
+	decode func(selector, field string) string,
 ) string {
-	s := decode(m.TitleField, "isthisignoredlmao?")
-	ssplit := strings.Split(s, " @ ")
-	return ssplit[len(ssplit)-1]
+	var s string
+	s = decode(m.CompanyField, "company")
+	p := strings.Split(s, "@")
+	s = p[len(p)-1]
+	return strings.TrimSpace(s)
 }
 
+//           key used             field taken from
 func (m golangprojectsMapper) Location(
-	decode func(val, field string) string,
+	decode func(selector, field string) string,
 ) string {
-	s := decode(m.DescriptionField, "isthisignoredlmao?")
-	return strings.Split(s, " - ")[0]
+	var s string
+	s = decode(m.LocationField, "location")
+	s = strings.Split(s, "-")[0]
+	return strings.TrimSpace(s)
 }

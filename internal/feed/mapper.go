@@ -10,12 +10,12 @@ type jObj = map[string]json.RawMessage
 
 // TODO: is this redundant
 type Mapper interface {
-	Title(decode func(val, field string) string) string
-	Company(decode func(val, field string) string) string
-	Seniority(decode func(val, field string) string) string
-	Link(decode func(val, field string) string) string
-	Location(decode func(val, field string) string) string
-	JobType(decode func(val, field string) string) string
+	Title(getter func(val, field string) string) string
+	Company(getter func(val, field string) string) string
+	Seniority(getter func(val, field string) string) string
+	Link(getter func(val, field string) string) string
+	Location(getter func(val, field string) string) string
+	JobType(getter func(val, field string) string) string
 
 	GetConfig() Config
 }
@@ -24,6 +24,8 @@ type Mapper interface {
 // each feed
 //
 // NOTE: Any omitted fields WILL BE IGNORED
+// TODO: rename these ..Field to ..Selector (because they identify by key or whatever)
+// maybe KEy
 type DefaultMapper struct {
 	TitleField       string
 	CompanyField     string
@@ -44,43 +46,43 @@ func (m DefaultMapper) GetConfig() Config {
 }
 
 func (m DefaultMapper) Title(
-	decode func(val, field string) string,
+	getter func(val, field string) string,
 ) string {
-	return decode(m.TitleField, "title")
+	return getter(m.TitleField, "title")
 }
 
 func (m DefaultMapper) Company(
-	decode func(val, field string) string,
+	getter func(val, field string) string,
 ) string {
-	return decode(m.CompanyField, "company")
+	return getter(m.CompanyField, "company")
 }
 
 func (m DefaultMapper) Description(
-	decode func(val, field string) string,
+	getter func(val, field string) string,
 ) string {
-	return decode(m.CompanyField, "company")
+	return getter(m.CompanyField, "company")
 }
 
 func (m DefaultMapper) Seniority(
-	decode func(val, field string) string,
+	getter func(val, field string) string,
 ) string {
-	return decode(m.SeniorityField, "seniority")
+	return getter(m.SeniorityField, "seniority")
 }
 
 func (m DefaultMapper) Link(
-	decode func(val, field string) string,
+	getter func(val, field string) string,
 ) string {
-	return decode(m.LinkField, "link")
+	return getter(m.LinkField, "link")
 }
 
 func (m DefaultMapper) Location(
-	decode func(val, field string) string,
+	getter func(val, field string) string,
 ) string {
-	return decode(m.LocationField, "location")
+	return getter(m.LocationField, "location")
 }
 
 func (m DefaultMapper) JobType(
-	decode func(val, field string) string,
+	getter func(val, field string) string,
 ) string {
-	return decode(m.JobTypeField, "jobType")
+	return getter(m.JobTypeField, "jobType")
 }

@@ -10,7 +10,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-func makeExtractor(
+func makeGetterJSON(
 	o map[string]json.RawMessage,
 ) func(val, field string) string {
 	// returns a closure that has o baked in
@@ -22,6 +22,24 @@ func makeExtractor(
 	}
 }
 
+func makeGetterRSS(
+	log *logrus.Entry,
+	feeditem FeedItemWrapped,
+	curr Feed,
+) func(val, field string) string {
+	return func(selector, field string) string {
+		if v, err := feeditem.Get(selector); err == nil {
+			return v
+		}
+		log.WithFields(logrus.Fields{
+			"field": field,
+			"with":  selector,
+			"for":   curr.Name,
+		}).Warn("get")
+		return ""
+	}
+}
+
 func ParseJSON(log *logrus.Entry, curr Feed, objs []map[string]json.RawMessage) ([]JobItem, error) {
 	out := make([]JobItem, 0, len(objs))
 	now := time.Now()
@@ -30,13 +48,13 @@ func ParseJSON(log *logrus.Entry, curr Feed, objs []map[string]json.RawMessage) 
 	for _, obj := range objs {
 		objCopy := obj
 
-		extractor := makeExtractor(objCopy)
-		title := m.Title(extractor)
-		link := m.Link(extractor)
-		company := m.Company(extractor)
-		location := m.Location(extractor)
-		seniorityStr := m.Seniority(extractor)
-		jobTypeStr := m.JobType(extractor)
+		getter := makeGetterJSON(objCopy)
+		title := m.Title(getter)
+		link := m.Link(getter)
+		company := m.Company(getter)
+		location := m.Location(getter)
+		seniorityStr := m.Seniority(getter)
+		jobTypeStr := m.JobType(getter)
 
 		tags := getStringSlice(obj, "tags", "technologies", "skills")
 
@@ -107,29 +125,11 @@ func ParseRSS(log *logrus.Entry, curr Feed, body io.Reader) ([]JobItem, error) {
 		cfg := curr.Mapper.GetConfig()
 		feeditem := FeedItemWrapped{fi}
 
-		// TODO: clarify
-		extractor := func(selector, field string) string {
-			if v, err := feeditem.Get(selector); err == nil {
-				return v
-			}
-			log.WithFields(logrus.Fields{
-				"field": field,
-				"with":  selector,
-				"for":   curr.Name,
-			}).Warn("get")
-			return ""
-		}
+		getter := makeGetterRSS(log, feeditem, curr)
 
-		// TODO: clarify
-		title := curr.Mapper.Title(func(_, _ string) string {
-			return extractor(cfg.TitleField, "title")
-		})
-		company := curr.Mapper.Company(func(_, _ string) string {
-			return extractor(cfg.CompanyField, "company")
-		})
-		location := curr.Mapper.Location(func(_, _ string) string {
-			return extractor(cfg.LocationField, "location")
-		})
+		title := curr.Mapper.Title(getter)
+		company := curr.Mapper.Company(getter)
+		location := curr.Mapper.Location(getter)
 
 		var age time.Duration
 		if !when.IsZero() {
@@ -138,7 +138,7 @@ func ParseRSS(log *logrus.Entry, curr Feed, body io.Reader) ([]JobItem, error) {
 
 		item := JobItem{
 			Source:   curr.Name,
-			Link:     extractor(cfg.LinkField, "link"),
+			Link:     getter(cfg.LinkField, "link"),
 			Title:    title,
 			Company:  company,
 			Location: location,
@@ -147,7 +147,7 @@ func ParseRSS(log *logrus.Entry, curr Feed, body io.Reader) ([]JobItem, error) {
 		}
 
 		if cfg.JobTypeField != "" {
-			jobTypeStr := extractor(cfg.JobTypeField, "job type")
+			jobTypeStr := getter(cfg.JobTypeField, "job type")
 			if jobTypeStr != "" {
 				jobType, err := ParseJobType(log, jobTypeStr)
 				if err != nil {
