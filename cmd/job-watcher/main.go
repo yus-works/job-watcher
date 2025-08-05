@@ -30,7 +30,7 @@ func main() {
 	_ = os.MkdirAll(filepath.Dir(dbPath), 0o755)
 	_ = os.MkdirAll(filepath.Dir(logPath), 0o755)
 
-	logg, closer, err := logging.New(logrus.WarnLevel, logPath)
+	logg, closer, err := logging.New(logrus.InfoLevel, logPath)
 	if err != nil {
 		log.Fatalf("logger init: %v", err)
 	}
