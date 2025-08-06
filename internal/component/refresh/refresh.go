@@ -62,6 +62,7 @@ func Register(
 		insertedCount := 0
 		skippedCount := 0
 
+		// TODO: have this writing happen on a dedicated goroutine myb
 		for it := range itemsCh {
 			inserted, err := st.Insert(log, ctx, it)
 			if err != nil {
