@@ -9,7 +9,6 @@ import (
 	"github.com/yus-works/job-watcher/internal/feed"
 )
 
-// TODO: is this redundant
 var _ feed.Mapper = feed.DefaultMapper{}
 
 var FEEDS = []feed.Feed{
