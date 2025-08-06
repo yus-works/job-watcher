@@ -12,8 +12,6 @@ import (
 // TODO: is this redundant
 var _ feed.Mapper = feed.DefaultMapper{}
 
-// TODO: add refreshPeriod field to each feed
-// that triggers the refresh routine or something
 var FEEDS = []feed.Feed{
 	{
 		Name: "Remotive",
