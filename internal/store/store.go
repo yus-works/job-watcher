@@ -197,7 +197,7 @@ VALUES
 			"jobType": j.JobType,
 			"title":   j.Title,
 			"src":     j.Source,
-		}).Warn("unknown seniority")
+		}).Warn("unknown jobtype")
 	}
 
 	hash := HashNormalized64(Identifier(j))
