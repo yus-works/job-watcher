@@ -200,6 +200,14 @@ VALUES
 		}).Warn("unknown jobtype")
 	}
 
+	// pick "now" if the date is the zero value; otherwise normalize to UTC.
+	dateStr := func() string {
+		if j.Date.IsZero() {
+			return time.Now().UTC().Format(time.RFC3339)
+		}
+		return j.Date.UTC().Format(time.RFC3339)
+	}()
+
 	hash := HashNormalized64(Identifier(j))
 
 	res, err := tx.ExecContext(ctx, q,
@@ -212,7 +220,7 @@ VALUES
 
 		string(j.Seniority),
 		string(j.JobType),
-		j.Date.Format(time.RFC3339),
+		dateStr,
 		j.Score,
 	)
 	if err != nil {
