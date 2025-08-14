@@ -173,7 +173,7 @@ func (s *JobStore) Insert(
 INSERT OR IGNORE INTO jobs
 	(
 		hash, source, title, link, company, location,
-		seniority, jobType,
+		seniority, jobtype,
 		date, score
 	)
 VALUES
