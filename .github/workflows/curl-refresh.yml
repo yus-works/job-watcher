@@ -1,8 +1,8 @@
 name: Curl GET with secret
-
 on:
+  schedule:
+    - cron: '0 */8 * * *'  # Runs every 8 hours at minute 0
   workflow_dispatch: {}
-
 jobs:
   call-endpoint:
     runs-on: ubuntu-latest
