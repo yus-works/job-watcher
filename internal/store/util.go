@@ -87,7 +87,7 @@ func parseDate(
 func buildSelectQuery(sort string) (string, error) {
 	parts := strings.Split(strings.ToLower(sort), "-")
 	col := "date"
-	dir := "DESC"
+	dir := "ASC"
 
 	if len(parts) == 2 {
 		switch parts[0] {
