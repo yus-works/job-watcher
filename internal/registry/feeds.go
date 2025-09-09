@@ -125,20 +125,21 @@ var FEEDS = []feed.Feed{
 		},
 		Parse: feed.ParseRSS,
 	},
-	{
-		Name: "Infostud",
-		URL:  "http://rss.infostud.com/poslovi/",
-		Mapper: infostudMapper{
-			DefaultMapper: feed.DefaultMapper{
-				TitleField:    "title",
-				LinkField:     "link",
-				CompanyField:  "description",
-				LocationField: "description",
-				DateField:     "pubDate",
-			},
-		},
-		Parse: feed.ParseRSS,
-	},
+	// terrible listings
+	// {
+	// 	Name: "Infostud",
+	// 	URL:  "http://rss.infostud.com/poslovi/",
+	// 	Mapper: infostudMapper{
+	// 		DefaultMapper: feed.DefaultMapper{
+	// 			TitleField:    "title",
+	// 			LinkField:     "link",
+	// 			CompanyField:  "description",
+	// 			LocationField: "description",
+	// 			DateField:     "pubDate",
+	// 		},
+	// 	},
+	// 	Parse: feed.ParseRSS,
+	// },
 	{
 		Name: "Golangprojects",
 		URL:  "https://www.golangprojects.com/rss.xml",
@@ -152,4 +153,8 @@ var FEEDS = []feed.Feed{
 		},
 		Parse: feed.ParseRSS,
 	},
+	// {
+	// 	Name: "Fly.io",
+	// 	URL: "https://fly.io/jobs/feed.xml",
+	// },
 }
