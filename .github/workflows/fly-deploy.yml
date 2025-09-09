@@ -1,4 +1,5 @@
 # See https://fly.io/docs/app-guides/continuous-deployment-with-github-actions/
+# TODO: make this work
 
 name: Fly Deploy
 on:
