@@ -1,59 +1,115 @@
-# Job Watcher - Go Backend Project for Aggregating Job Listings
+# Job Watcher
 
-**Job Watcher** is a Go-powered web backend that aggregates software job postings from multiple sources into a single, clean interface. This project was built to solve a real-world problem: keeping track of new job opportunities across various remote and local job boards without manual effort. Job Watcher continuously fetches and stores job listings from several APIs and RSS feeds, offering a unified view with filtering and sorting. It’s implemented with a focus on **simplicity, reliability, and observability**, showcasing the author’s expertise in Go web engineering and backend system design.
+A Go backend service that aggregates software engineering job postings from multiple remote job boards and RSS feeds into a unified interface.
 
-## Project Description
+## Overview
 
-Job Watcher functions as a lightweight web portal where a user (in this case, the developer during their job search) can quickly scan aggregated job listings. Written in Go, it comprises:
+Job Watcher continuously fetches job listings from various APIs and RSS feeds, deduplicates them, and presents them through a clean web interface with filtering and search capabilities. Built with Go's standard library and SQLite, it prioritizes simplicity, performance, and reliability.
 
-- A **data fetcher** that pulls in jobs from multiple external sources.
-- A **storage layer** using SQLite to persist and deduplicate job posts.
-- A **web server** with minimal HTML templating to display the jobs and enable user interaction (filtering, sorting).
-- A set of **endpoints** (HTTP routes) that support dynamic updates (using HTMX for seamless AJAX-like interactions on the front-end).
+## Problem Statement
 
-Despite its lean appearance, under the hood Job Watcher is architected like a production service. The decision to use Go’s standard `net/http` and `html/template` libraries (instead of heavier frameworks) reflects an emphasis on **clarity, performance, and low dependency footprint** - all desirable qualities in a production codebase. The result is a fast, responsive application that can run continuously with minimal resource usage, perfect for deployment on a small cloud instance or even a Raspberry Pi.
+Monitoring multiple job boards is time-consuming and prone to missing opportunities. Job Watcher automates this process by:
+- Aggregating listings from Remotive, RemoteOK, Jobicy, Himalayas, WeWorkRemotely, and other sources
+- Deduplicating posts that appear across multiple platforms
+- Providing a single interface with search and filtering capabilities
 
-## Motivation and Use Case
+## Technical Architecture
 
-The project was motivated by the developer’s own experience in job hunting. With opportunities posted on different platforms (remote job boards, local sites, company pages), it’s easy to miss or laboriously check each site. Job Watcher automates this process, acting as a personal “job feed aggregator.” The motivation wasn’t just convenience; it was also to demonstrate back-end craftsmanship:
+### Data Pipeline
+- **Multi-source ingestion**: Handles JSON APIs and RSS feeds with different schemas
+- **Normalization**: Converts heterogeneous data into a consistent internal format
+- **Deduplication**: Uses content-based hashing to identify and eliminate duplicate listings
+- **Storage**: SQLite database with properly normalized schema including tagging system
 
-- **Real-World Data Integration:** Incorporating multiple data sources (with different formats) into one system.
-- **Backend for Frontend:** Creating a tailored web backend that serves exactly the information needed for a specific task (job searching).
-- **Go Language Proficiency:** Building a complete web solution in Go showcases the author’s command of Go’s ecosystem, from concurrency to database usage and deploying services.
+### Concurrency & Performance
+- Parallel feed fetching using goroutines and WaitGroups
+- Custom HTTP client with connection pooling and optimized timeouts
+- Context-based cancellation for handling slow or stuck sources
+- Rate limiting with configurable cooldown periods to respect API limits
 
-This real-world use case ensures that Job Watcher isn’t a toy app, but rather a **pragmatic tool**. It deals with flaky networks, varying data schemas, and the need for timely updates - scenarios any production web service might face. Solving these in a personal project demonstrates readiness to handle similar challenges on the job.
+### Web Interface
+- Server-side rendering with Go's `html/template`
+- Dynamic updates via HTMX for modern UX without SPA complexity
+- RESTful endpoints for job streaming and filtering
+- Token-protected refresh endpoint with rate limiting
 
-## Core Features and Components
+### Observability
+- Structured logging with detailed network timing metrics
+- Performance monitoring using `httptrace` hooks
+- Request-level timing for DNS, TLS handshake, and time-to-first-byte
+- Error tracking with contextual information for debugging
 
-- **Multi-Source Job Aggregation:** Job Watcher pulls job listings from several sources including Remotive, RemoteOK, Jobicy, Himalayas (all popular remote job boards), WeWorkRemotely (RSS feed), and even a local Serbian job board (Infostud). Each source has its own response format (JSON, RSS, etc.), so the system normalizes them into a common format internally. This is achieved via a pluggable feed registry, adding a new source is as simple as defining how to parse it and what fields to extract. This design shows **extensibility** and thoughtful abstraction, allowing the project to grow with minimal refactoring.
+## Implementation Highlights
 
-- **Persistent Storage and Deduplication:** All fetched jobs are stored in a local SQLite database. This provides durability (the data persists between runs) and allows complex querying (SQL for filtering and sorting). Each job entry is uniquely identified by a content-based hash, so duplicates (the same job appearing on multiple boards or repeated fetches) are detected and skipped. The database schema is carefully designed with normalization in mind: fields like job type and seniority are constrained to a set of known values for data consistency. There’s also a tagging system in place (with separate `tags` and `job_tags` tables), laying the groundwork for features like marking favorite jobs or categorizing opportunities. These choices mirror production system design, where data integrity and future extensibility are considered from day one.
+**Database Design**: The schema uses CHECK constraints to ensure data integrity, with separate tables for tags and job relationships. The INSERT OR IGNORE pattern efficiently handles deduplication at the database level.
 
-- **Scheduled Refresh with Rate Limiting:** Rather than constantly hammering external APIs, Job Watcher refreshes its data on a schedule in a controlled manner. A dedicated `/refresh` endpoint triggers an update from all sources; it is protected by a secret token and also enforces a cooldown period (by default, it refuses to run more than once every 6 hours). This ensures **reliability and respect for rate limits**, the app won’t overload external services or get itself blocked. The refresh operation fetches all feeds concurrently using Goroutines, making full use of Go’s concurrency to speed up the process. Jobs from multiple sources are retrieved in parallel, with a context used to handle timeouts or cancellation. This component demonstrates the developer’s understanding of **concurrency patterns and careful resource management** in Go.
+**Error Handling**: Failed feed fetches are isolated and logged without affecting other sources. HTTP endpoints return appropriate status codes (200, 429, 500) with meaningful error messages.
 
-- **Efficient Web Interface (Go Templates + HTMX):** The frontend of Job Watcher is purposefully simple but effective. Using Go’s `html/template`, the server renders an initial HTML page listing all jobs and providing filter controls. The interactivity (filtering by keywords, sorting by date or score) is powered by HTMX, a lightweight JavaScript library that allows dynamic content updates via HTML over HTTP. When a user types in the search box or changes the sort order, an asynchronous request is made to the backend (`/jobs/reset` or `/jobs/stream` endpoints), which responds with a snippet of HTML (just the updated list of jobs) that HTMX swaps into the page. This approach keeps the frontend logic minimal (no complex SPA framework needed) while still providing a **dynamic, modern UX**. It’s a pragmatic choice, showing that the developer can choose the right tools: using server-side rendering for simplicity and leveraging a little AJAX/HTMX for reactivity, resulting in an interface that feels snappy and interactive without a heavy client-side application. Importantly, using `html/template` means templates are automatically escaped, providing security against XSS; a detail that shows awareness of secure coding practices in web development.
+**Deployment Ready**: Includes multi-stage Dockerfile producing minimal images, Fly.io configuration for cloud deployment, and environment-based configuration following 12-factor principles.
 
-- **Observability & Performance Monitoring:** From the beginning, Job Watcher was built with observability in mind. It uses structured logging via `logrus` to record important events and metrics. For example, every external feed fetch logs timing information for DNS lookup, connection, TLS handshake, and time-to-first-byte. This fine-grained network timing is achieved with Go’s `httptrace` hooks and is logged at debug level for analysis. Such insight is invaluable in production; it allows the developer to see which external sources might be slow or if network issues are occurring. Additionally, a custom timing utility wraps operations (like the total refresh job) to log how long they took. This attention to performance data demonstrates a level of professionalism: the developer is treating the system like one that will be maintained long-term, where understanding performance characteristics and bottlenecks is crucial. If an external API is slow or returns errors, those are logged with context. The logs also include key fields (like source name, job counts, etc.) for each run, making troubleshooting straightforward. This **commitment to observability** shows that the author is well-versed in writing maintainable services that one can debug and tune in a production environment.
+**Development Environment**: Nix flake provides reproducible development setup with all necessary tooling.
 
-## Technical Design and Strengths
+## Code Structure
 
-**Simplicity and Clarity:** One of the core tenets of Job Watcher’s design is keeping things simple where possible. By using Go’s standard libraries for HTTP and templating, the code remains easy to follow and well-documented by the community’s standards. There’s no heavy framework obscuring the control flow; a hiring manager or fellow engineer can open `main.go` and trace exactly how the server is set up (initializing logging, database, router) in mere minutes. This clarity makes the project maintainable and reduces technical debt, which is a hallmark of a strong backend engineer. It’s clear that every addition to the project was considered: if it didn’t significantly benefit the project, it wasn’t included. This restraint results in a lean codebase that accomplishes its goals without unnecessary complexity.
+```
+├── main.go           # Application entry point and server setup
+├── feeds/            # Feed parsing and normalization logic
+├── storage/          # Database interface and operations
+├── handlers/         # HTTP handlers and routing
+├── templates/        # HTML templates
+└── static/           # CSS and client-side assets
+```
 
-**Concurrency and Efficiency:** Job Watcher takes full advantage of Go’s strengths in concurrent programming. Fetching data from multiple job APIs is I/O-bound and perfect for parallelization; the implementation uses WaitGroups and goroutines to fetch all feeds in parallel, cutting down the waiting time dramatically (the slowest source determines the total time, rather than sum of all). The code carefully manages these goroutines, and uses Go contexts to propagate timeouts/cancellation, ensuring that a stuck or slow source won’t hang the entire refresh operation. The custom HTTP client is tuned with sensible defaults (connection pooling, custom DNS resolver for speed as noted, timeouts) which shows a deeper understanding of how to make robust network calls. By controlling these details, the project avoids common pitfalls (like requests hanging indefinitely or DNS slowdowns) and remains snappy. This sort of low-level tuning is often what differentiates a beginner from a seasoned backend engineer.
+## Running the Project
 
-**Data Integrity and Processing:** The way data is handled in Job Watcher reflects a strong grasp of backend data processing:
+```bash
+# Local development
+go run main.go
 
-- Before insertion, each job item is normalized (titles and companies downcased and stripped of special chars for the hash, consistent formatting for job types and seniority levels regardless of source differences). This means the database isn’t filled with near-duplicates or inconsistent values. The use of CHECK constraints in SQLite ensures that certain fields only contain expected values (preventing, for instance, a malformed “Internshipship” type string from creeping in due to a source quirk). These validations mimic what one would do in larger systems (perhaps via an ORM or explicit checks) to keep the dataset clean. It’s easier to trust and work with the data as a result.
-- The insertion logic uses “INSERT OR IGNORE” semantics for deduplication (by primary key hash). This is a clever use of SQL features to simplify logic; duplicates simply don’t get inserted, and the code can check the affected row count to see if anything new was added. This shows familiarity with SQL and efficiency (letting the database engine handle what it’s good at, rather than doing duplicate checks in Go code for each item).
+# Docker
+docker build -t job-watcher .
+docker run -p 8080:8080 job-watcher
 
-**Reliability and Error Handling:** In Job Watcher, errors are not ignored or glossed over; they are handled deliberately. If a feed fetch fails or returns a bad status, the error is logged with context and that feed’s data is skipped (so one misbehaving source won’t crash the whole refresh). If parsing fails for a particular feed’s data, that error too is caught and logged. The refresh endpoint provides clear HTTP responses (HTTP 200 with counts of new jobs, or HTTP 429 “Too Many Requests” if called too frequently, or 500 if something went wrong during processing). This attention to proper HTTP semantics and error messaging is something that stands out in a personal project, as it’s more typical of production API design. It means the developer is mindful of how the service would be consumed and monitored. Additionally, the application cleans up resources properly: database connections are closed on shutdown, and the code is structured to allow graceful cancellation of in-flight operations. All these are indicators of **robust, production-quality coding practices**.
+# With Nix
+nix develop
+go run main.go
+```
 
-**Infrastructure Awareness:** Deploying Job Watcher is made straightforward and cloud-ready. The presence of a Dockerfile and Fly.io configuration means the project can be spun up in a consistent environment easily. The Dockerfile is multi-stage, producing a minimal image that contains only the Go binary and necessary static files; this minimizes the attack surface and operational overhead. It even creates a non-root user for running the service, which is a security best practice sometimes overlooked in small projects. Environment variables (like `DB_PATH`, `LOG_PATH`, `REFRESH_TOKEN`) are used to configure the service, adhering to Twelve-Factor App principles for config. On Fly.io, a volume is mounted to persist the SQLite DB across restarts and an appropriate amount of memory is allocated for the machine. The fact that the developer included a Nix flake for development environment shows comfort with advanced tooling: anyone cloning the repo can enter a fully set up dev shell (with Go, linters, hot-reload tool, etc.) ensuring a reproducible dev experience. For a hiring manager, these infrastructure considerations demonstrate that the candidate can not only write code but also package and deploy it – a full lifecycle skill set that is highly valuable in web backend roles.
+## Configuration
 
-## Conclusion: Professional-Grade Backend Craftsmanship
+Environment variables:
+- `DB_PATH`: SQLite database location
+- `LOG_PATH`: Log file path
+- `REFRESH_TOKEN`: Secret token for protected endpoints
+- `PORT`: HTTP server port
 
-Job Watcher might have started as a personal utility, but it’s implemented with the rigor and thoughtfulness of a production system. From the efficient data fetching to the careful data modeling and the deployment pipeline, every aspect reflects a **backend engineer’s mindset** for building reliable, maintainable services. The project showcases the author’s fluency in Go and the associated ecosystem; including writing idiomatic Go code, using concurrency patterns effectively, and integrating libraries when they add value (e.g., `logrus` for logging, but otherwise sticking to the standard library to keep things simple and dependable).
+## Design Decisions
 
-For a hiring manager evaluating this project, several key strengths become apparent. **Technical communication** is evident in the well-structured code and the clear separation of components, as well as in the documentation and design decisions. The developer clearly understands how to make a service observable and performant; qualities that translate directly to running high-uptime web services in a professional setting. Moreover, the **pragmatism and polish** in Job Watcher (such as choosing the right tools for the job, and not over-engineering the frontend) indicate a mature approach to engineering: focusing on solving the problem effectively with minimal fuss.
+**Standard Library Focus**: Uses Go's `net/http` and `html/template` instead of frameworks, reducing dependencies and improving maintainability.
 
-In essence, Job Watcher stands as an example of backend craftsmanship. It solved a real need for the author and in doing so, became a vehicle to demonstrate skills in Go web development, system architecture, and operations. The subtle but important details (like secure template usage, controlled update frequency, and use of context for cancellation) are exactly the kind of considerations great backend engineers make in their projects. The creator of Job Watcher approaches challenges with a blend of **practicality, technical skill, and foresight**, the same qualities that would make them an excellent addition to any Go backend team looking for someone who can build and run robust web systems.
+**SQLite Over PostgreSQL**: For this use case, SQLite provides sufficient performance with simpler deployment and no external dependencies.
+
+**HTMX Over React/Vue**: Delivers dynamic functionality without JavaScript build complexity, keeping the frontend lightweight and maintainable.
+
+**Content Hashing for Deduplication**: More reliable than URL-based deduplication since the same job often appears with different URLs across platforms.
+
+## Future Enhancements
+
+- User accounts for saved searches and job tracking
+- Email notifications for matching jobs
+- Additional job board integrations
+- Advanced filtering by salary range and tech stack
+- API endpoints for programmatic access
+
+## Technical Stack
+
+- **Language**: Go 1.21+
+- **Database**: SQLite
+- **Frontend**: HTML templates + HTMX
+- **Logging**: Logrus for structured logging
+- **Deployment**: Docker, Fly.io
+- **Development**: Nix for reproducible environments
+
+---
+
+This project demonstrates practical Go backend development with attention to production concerns: data integrity, error handling, observability, and deployment. The codebase emphasizes clarity and maintainability while solving a real-world problem.
