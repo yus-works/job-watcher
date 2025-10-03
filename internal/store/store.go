@@ -362,3 +362,12 @@ func (s *JobStore) WipeDB() error {
 	}
 	return os.Remove(s.path)
 }
+
+func (s *JobStore) DeleteOldPostings(ctx context.Context) error {
+	oneMonthAgo := time.Now().UTC().AddDate(0, -1, 0).Format(time.RFC3339)
+
+	q := `DELETE FROM jobs WHERE inserted_at < ?`
+
+	_, err := s.db.ExecContext(ctx, q, oneMonthAgo)
+	return err
+}

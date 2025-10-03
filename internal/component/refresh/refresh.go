@@ -170,6 +170,8 @@ func Register(
 
 		sendTelegramNotification(log, ctx, tl, items, filterFn)
 
+		st.DeleteOldPostings(ctx)
+
 		w.Header().Set("Content-Type", "text/plain")
 		w.WriteHeader(http.StatusOK)
 		fmt.Fprintf(
