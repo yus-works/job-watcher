@@ -82,6 +82,6 @@ func registerHandlers(
 		jobs.ResetJobs(mkLogger(r), t, s, c)(w, r)
 	})
 	m.HandleFunc("/refresh", func(w http.ResponseWriter, r *http.Request) {
-		refresh.Register(mkLogger(r), s, c, refreshSecret)(w, r)
+		refresh.Register(mkLogger(r), t, s, c, refreshSecret)(w, r)
 	})
 }
