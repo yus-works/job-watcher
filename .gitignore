@@ -4,3 +4,4 @@ tmp/
 *.db*
 *.log
 data/
+.env
