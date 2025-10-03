@@ -1,0 +1,6 @@
+{{ define "notification" }}
+	<b>{{ .Title }} | {{ .Company }}</b>
+	{{ .Link }}
+	{{ if .Seniority }}#{{.Seniority}} {{ end }}
+	{{ range .Tags }}#{{ . }} {{ end }}
+{{ end }}
