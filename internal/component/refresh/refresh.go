@@ -101,7 +101,7 @@ func Register(
 		ctx := req.Context()
 
 		if last, err := st.LastRefresh(ctx); err == nil && !last.IsZero() {
-			if wait := 6*time.Hour - time.Since(last); wait > 0 {
+			if wait := 3*time.Hour - time.Since(last); wait > 0 {
 				w.Header().Set("Content-Type", "text/plain")
 				w.WriteHeader(http.StatusTooManyRequests)
 				fmt.Fprintf(w, "too frequent; try again in %s\n", wait)
