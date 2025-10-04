@@ -11,6 +11,7 @@ import (
 	"html/template"
 	"net/http"
 	"os"
+	"regexp"
 	"slices"
 	"strings"
 	"time"
@@ -154,7 +155,8 @@ func Register(
 					continue
 				}
 
-				if !strings.Contains(strings.ToLower(it.Title), "go") {
+				goRegex := regexp.MustCompile(`(?i)\bgo\b|\bgolang\b`)
+				if !goRegex.MatchString(it.Title) && !goRegex.MatchString(it.Company) {
 					continue
 				}
 
