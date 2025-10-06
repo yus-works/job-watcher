@@ -68,6 +68,20 @@ func sendTelegramNotification(
 	}
 	defer resp.Body.Close()
 
+	body, _ := io.ReadAll(resp.Body)
+
+	var result struct {
+		Ok          bool   `json:"ok"`
+		Description string `json:"description,omitempty"`
+	}
+	json.Unmarshal(body, &result)
+
+	if result.Ok {
+		log.Info("Telegram response: status=%d ok=true", resp.StatusCode)
+	} else {
+		log.Info("Telegram response: status=%d ok=false error=%q", resp.StatusCode, result.Description)
+	}
+
 	return nil
 }
 
