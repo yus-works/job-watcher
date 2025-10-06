@@ -170,11 +170,16 @@ func Register(
 				}
 
 				goRegex := regexp.MustCompile(`(?i)\bgo\b|\bgolang\b`)
-				if !goRegex.MatchString(it.Title) && !goRegex.MatchString(it.Company) {
-					continue
-				}
 
-				finalItems = append(finalItems, it)
+				if goRegex.MatchString(it.Title) {
+					finalItems = append(finalItems, it)
+
+				} else if goRegex.MatchString(it.Company) {
+					finalItems = append(finalItems, it)
+
+				} else if strings.Contains(strings.ToLower(it.Source), "golangprojects") {
+					finalItems = append(finalItems, it)
+				}
 			}
 
 			return finalItems
