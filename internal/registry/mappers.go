@@ -66,7 +66,6 @@ func (m golangprojectsMapper) Company(
 	return strings.TrimSpace(s)
 }
 
-//           key used             field taken from
 func (m golangprojectsMapper) Location(
 	decode func(selector, field string) string,
 ) string {
