@@ -166,10 +166,6 @@ func Register(
 			return finalItems
 		}
 
-		for _, i := range items {
-			fmt.Println(i)
-		}
-
 		sendTelegramNotification(log, ctx, tl, items, filterFn)
 
 		st.DeleteOldPostings(ctx)
