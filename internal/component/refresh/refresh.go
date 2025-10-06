@@ -9,6 +9,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io"
 	"net/http"
 	"os"
 	"regexp"
@@ -38,7 +39,6 @@ func sendTelegramNotification(
 
 	url := fmt.Sprintf("https://api.telegram.org/bot%s/sendMessage", botToken)
 
-	var message string
 	var items []string
 	for _, item := range filterFunc(jobItems) {
 		itemStr, err := tmpl.Render(log, ctx, tl, "notification", jobs.NewDisplayItem(item))
@@ -49,37 +49,37 @@ func sendTelegramNotification(
 		items = append(items, itemStr)
 	}
 
-	message = strings.Join(items, "\n\n")
+	for _, item := range items {
+		payload := map[string]any{
+			"chat_id":    chatID,
+			"text":       item,
+			"parse_mode": "HTML",
+		}
 
-	payload := map[string]any{
-		"chat_id":    chatID,
-		"text":       message,
-		"parse_mode": "HTML",
-	}
+		jsonData, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		}
 
-	jsonData, err := json.Marshal(payload)
-	if err != nil {
-		return err
-	}
+		resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		if err != nil {
+			return err
+		}
+		defer resp.Body.Close()
 
-	resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
+		body, _ := io.ReadAll(resp.Body)
 
-	body, _ := io.ReadAll(resp.Body)
+		var result struct {
+			Ok          bool   `json:"ok"`
+			Description string `json:"description,omitempty"`
+		}
+		json.Unmarshal(body, &result)
 
-	var result struct {
-		Ok          bool   `json:"ok"`
-		Description string `json:"description,omitempty"`
-	}
-	json.Unmarshal(body, &result)
-
-	if result.Ok {
-		log.Info("Telegram response: status=%d ok=true", resp.StatusCode)
-	} else {
-		log.Info("Telegram response: status=%d ok=false error=%q", resp.StatusCode, result.Description)
+		log.WithFields(logrus.Fields{
+			"status":      resp.StatusCode,
+			"ok":          result.Ok,
+			"description": result.Description,
+		}).Info("Telegram response:")
 	}
 
 	return nil
