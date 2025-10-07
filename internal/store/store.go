@@ -1,7 +1,5 @@
 package store
 
-// TODO: introduce deletion of old postings
-
 import (
 	"context"
 	"database/sql"
